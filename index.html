@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explorateur de cartes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root {
+    --bg: #000;
+    --panel: rgba(20, 17, 13, .92);
+    --panel-solid: #14110d;
+    --edge: #8a6d3b;
+    --edge-hi: #d4b06a;
+    --text: #e8dcc0;
+    --muted: #a8977a;
+    --gem: #2fb79c;
+    --title: 'Cinzel', Georgia, serif;
+    --ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+               font: 14px/1.4 var(--ui); overflow: hidden; }
+  #map { position: absolute; inset: 0; background: var(--bg); }
+  .leaflet-container { background: var(--bg); font: inherit; }
+
+  /* Curseurs du jeu */
+  html, body, button, a, .leaflet-container, .leaflet-grab, .leaflet-interactive { cursor: url(cursor.png) 0 0, default; }
+  .leaflet-dragging .leaflet-grab, .leaflet-dragging .leaflet-container { cursor: url(cursor-grab.png) 0 13, grabbing; }
+  body.grab-anim, body.grab-anim * { cursor: none !important; }
+
+
+  .frame { background: var(--panel); border: 1px solid var(--edge);
+           box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(212,176,106,.15), 0 6px 18px rgba(0,0,0,.6);
+           border-radius: 3px; }
+
+  /* Menu des cartes */
+  #panel { position: absolute; z-index: 1000; top: 12px; left: 12px; width: 220px;
+           max-height: calc(100% - 24px); display: flex; flex-direction: column; }
+  #panel header { display: flex; align-items: center; justify-content: space-between;
+                  gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--edge); }
+  #panel h1 { margin: 0; font: 700 15px/1.2 var(--title); letter-spacing: .06em;
+              color: var(--edge-hi); text-transform: uppercase; }
+  #toggle { display: none; background: none; border: 1px solid var(--edge); color: var(--text);
+            width: 30px; height: 30px; border-radius: 3px; font-size: 16px; line-height: 1; }
+  #panel nav { overflow-y: auto; padding: 6px; }
+  #panel nav, .list.pnj, #info { scrollbar-width: thin; scrollbar-color: var(--edge) transparent; }
+  .section { margin: 6px 6px 4px; font: 500 11px var(--title); letter-spacing: .12em;
+             text-transform: uppercase; color: var(--muted); }
+  .list { list-style: none; margin: 0 0 6px; padding: 0; }
+  .list button { display: flex; align-items: center; gap: 10px; width: 100%;
+                 padding: 8px 10px; margin: 1px 0; border: 1px solid transparent;
+                 border-radius: 2px; background: none; color: var(--text);
+                 font: 14px var(--ui); text-align: left; }
+  .list button::before { content: ''; flex: none; width: 8px; height: 8px; transform: rotate(45deg);
+                         border: 1px solid var(--edge); background: transparent; }
+  .list button:hover { background: rgba(212,176,106,.08); border-color: rgba(138,109,59,.5); }
+  .list button[aria-current="true"] { background: rgba(47,183,156,.12); border-color: var(--edge);
+                                      color: #fff; }
+  .list button[aria-current="true"]::before { background: var(--gem); border-color: var(--edge-hi);
+                                              box-shadow: 0 0 6px var(--gem); }
+  .list button:focus-visible, #toggle:focus-visible, .tool:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+
+  /* Coordonnees */
+  #coords { position: absolute; z-index: 1000; left: 50%; bottom: 14px; transform: translateX(-50%);
+            display: flex; align-items: baseline; gap: 14px; padding: 7px 14px;
+            white-space: nowrap; pointer-events: none; }
+  #coords .world { font: 500 12px var(--title); letter-spacing: .08em; color: var(--edge-hi); }
+  #coords .xy { font: 600 15px ui-monospace, 'Cascadia Mono', Consolas, monospace;
+                font-variant-numeric: tabular-nums; min-width: 15ch; }
+  #coords .xy b { color: var(--muted); font-weight: 400; margin-right: 4px; }
+  #coords .hint { font-size: 12px; color: var(--muted); }
+
+  #toast { position: absolute; z-index: 1001; left: 50%; bottom: 62px; transform: translateX(-50%);
+           padding: 5px 12px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+  #grab { position: fixed; z-index: 2000; left: 0; top: 0; display: none; pointer-events: none;
+          image-rendering: pixelated; }
+  body.grab-anim #grab { display: block; }
+
+  /* Sections repliables */
+  details.group { margin: 2px 0; border-top: 1px solid rgba(138,109,59,.35); }
+  details.group > summary { display: flex; align-items: center; gap: 6px; padding: 9px 6px 7px;
+                            list-style: none; font: 500 11px var(--title); letter-spacing: .12em;
+                            text-transform: uppercase; color: var(--muted); user-select: none; }
+  details.group > summary::-webkit-details-marker { display: none; }
+  details.group > summary::after { content: '▸'; margin-left: auto; font-size: 12px;
+                                   transition: transform .15s; }
+  details.group[open] > summary::after { transform: rotate(90deg); }
+  details.group > summary:hover { color: var(--text); }
+  details.group > summary:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: -2px; }
+  details.group .n { color: var(--edge-hi); letter-spacing: 0; }
+  details.group[hidden] { display: none; }
+  .search { width: calc(100% - 8px); margin: 0 4px 6px; padding: 6px 8px; border: 1px solid var(--edge);
+            border-radius: 2px; background: #0b0907; color: var(--text); font: 13px var(--ui); }
+  /* Colonne de droite : fiche en haut, liste des PNJ dessous (jamais l'une sur l'autre) */
+  #side { position: absolute; z-index: 1000; top: 12px; right: 12px; bottom: 76px; width: 300px;
+          display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  #side > * { pointer-events: auto; }
+  #g-pnj { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #g-pnj[hidden] { display: none; }
+  .side-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px;
+               border: 0; background: none; color: var(--edge-hi); font: 700 13px/1.2 var(--title);
+               letter-spacing: .08em; text-transform: uppercase; text-align: left; }
+  .side-head::after { content: '▸'; margin-left: auto; color: var(--muted); font-size: 12px; transition: transform .15s; }
+  .side-head[aria-expanded="true"]::after { transform: rotate(90deg); }
+  .side-head:hover::after { color: var(--text); }
+  .side-head .n { color: var(--muted); font-weight: 500; letter-spacing: 0; }
+  .side-head:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: -2px; }
+  #pnj-body { display: flex; flex-direction: column; min-height: 0; padding: 6px; border-top: 1px solid var(--edge); }
+  #g-pnj.closed #pnj-body { display: none; }
+  .list.pnj { flex: 1 1 auto; min-height: 0; margin: 0; overflow-y: auto; }
+  .list.pnj button::before { border-radius: 50%; transform: none; background: var(--c); border-color: rgba(0,0,0,.6); }
+  .list button small { margin-left: auto; padding-left: 6px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .list button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* PNJ */
+  .pnj-icon span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--c);
+                   border: 2px solid #1a140c; box-shadow: 0 0 0 1px var(--c), 0 1px 3px #000; }
+  .pnj-icon.sel span { box-shadow: 0 0 0 2px #fff, 0 0 10px var(--c); }
+  .pnj-label { background: rgba(20,17,13,.85); border: 1px solid var(--edge); border-radius: 2px;
+               color: var(--text); font: 600 12px var(--ui); padding: 1px 6px; box-shadow: none; }
+  .pnj-label::before { display: none; }
+  .drawing .pnj-icon { pointer-events: none; }
+
+  /* Zones */
+  .list.zones button::before { background: var(--c); border-color: rgba(0,0,0,.6); }
+  .list.zones .empty { padding: 4px 10px; color: var(--muted); font-size: 13px; }
+  .zone-label { background: none; border: 0; box-shadow: none; padding: 0; color: #fff;
+                font: 700 13px/1.1 var(--title); letter-spacing: .05em; white-space: nowrap;
+                text-shadow: 0 0 2px #000, 0 0 5px #000, 0 1px 2px #000; }
+  .zone-label::before { display: none; }
+  .drawing .zone-poly, .drawing .isle-poly, .drawing .isle-label { pointer-events: none; }
+  .list.zones .isle-head { margin: 8px 6px 2px; color: var(--c); font: 500 11px var(--title);
+                           letter-spacing: .1em; text-transform: uppercase; }
+  .list.zones .isle-head:first-child { margin-top: 2px; }
+
+  /* Iles : sous chaque carte du menu, contour leger + nom en haut sur la carte */
+  .list.isles { margin: -1px 0 4px 20px; }
+  .list.isles button { padding: 4px 8px; font-size: 13px; color: var(--muted); }
+  .list.isles button::before { width: 6px; height: 6px; border-color: var(--c); }
+  .list.isles button:hover, .list.isles button[aria-current="true"] { color: #fff; }
+  .list.isles button[aria-current="true"]::before { background: var(--c); box-shadow: 0 0 6px var(--c); }
+  .isle-label span { position: absolute; transform: translate(-50%, -100%); padding-bottom: 4px;
+                     color: var(--c); font: 700 16px/1 var(--title); letter-spacing: .2em;
+                     text-transform: uppercase; white-space: nowrap;
+                     text-shadow: 0 0 3px #000, 0 0 8px #000, 0 1px 2px #000; }
+  .vtx { background: var(--gem); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #000; }
+  .vtx.mid { background: rgba(255,255,255,.55); border: 1px solid #000; }
+  .vtx.first { background: var(--edge-hi); }
+
+  #info { position: relative; flex: none; max-height: 55%; overflow-y: auto; padding: 14px 16px; }
+  #info[hidden] { display: none; }
+  #info .close { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border: 0;
+                 background: none; color: var(--muted); font-size: 20px; line-height: 1; }
+  #info .close:hover { color: #fff; }
+  #info .type { font: 500 11px var(--title); letter-spacing: .12em; text-transform: uppercase;
+                color: var(--muted); padding-right: 24px; }
+  #info h2 { margin: 2px 24px 8px 0; font: 700 18px/1.25 var(--title); color: var(--edge-hi); }
+  #info .desc { margin: 0 0 10px; white-space: pre-line; }
+  #info .desc a { color: var(--gem); word-break: break-all; }
+  #info .meta { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); white-space: pre-line; }
+  #info label { display: block; margin: 8px 0 3px; font-size: 12px; color: var(--muted); }
+  #info input, #info textarea, #info select { width: 100%; padding: 6px 8px; border: 1px solid var(--edge);
+                                border-radius: 2px; background: #0b0907; color: var(--text); font: 14px var(--ui); }
+  #info select option { background: #0b0907; color: var(--text); }
+  #info input[type=color] { height: 32px; padding: 2px; }
+  #info textarea { min-height: 90px; resize: vertical; }
+  #info .row { display: flex; gap: 8px; margin-top: 12px; }
+  .tool { display: block; width: 100%; margin: 3px 0; padding: 7px 10px; border: 1px solid var(--edge);
+          border-radius: 2px; background: rgba(212,176,106,.06); color: var(--text); font: 13px var(--ui);
+          text-align: left; }
+  .tool:hover { background: rgba(212,176,106,.16); color: #fff; }
+  .tool.danger { border-color: #7a3328; }
+  .tool.danger:hover { background: rgba(160,50,35,.25); }
+  #info .row .tool { text-align: center; }
+  #edit-status { margin: 6px 4px 2px; font-size: 12px; color: var(--muted); }
+
+  .leaflet-control-zoom.leaflet-bar { border: 1px solid var(--edge); box-shadow: 0 0 0 1px #000; }
+  .leaflet-control-zoom a { background: var(--panel-solid); color: var(--text); border-color: var(--edge); }
+  .leaflet-control-zoom a:hover { background: #241e16; color: #fff; }
+
+  @media (max-width: 640px) {
+    #panel { top: 8px; left: 8px; right: 8px; width: auto; }
+    #toggle { display: block; }
+    #panel:not(.open) nav { display: none; }
+    #panel:not(.open) header { border-bottom: 0; }
+    #coords { bottom: 10px; gap: 10px; padding: 6px 10px; }
+    #coords .hint { display: none; }
+    #side { top: auto; left: 8px; right: 8px; bottom: 58px; width: auto; max-height: 60%; }
+    .leaflet-control-zoom { display: none; }   /* zoom au doigt */
+  }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Carte"></div>
+
+<aside id="panel" class="frame">
+  <header>
+    <h1>Cartes</h1>
+    <button id="toggle" aria-expanded="false" aria-controls="maps-nav" title="Menu">&#9776;</button>
+  </header>
+  <nav id="maps-nav">
+    <div class="section">Monde</div>
+    <ul id="maps" class="list"></ul>
+    <details class="group" id="g-zones">
+      <summary>Zones <span class="n" id="n-zones"></span></summary>
+      <ul id="zones" class="list zones"></ul>
+    </details>
+    <div id="edit-tools" hidden>
+      <div class="section">Édition</div>
+      <button class="tool" id="t-new-isle">+ Nouvelle île</button>
+      <button class="tool" id="t-new">+ Nouvelle zone</button>
+      <button class="tool" id="t-new-pnj">+ Nouveau PNJ</button>
+      <button class="tool" id="t-export">Exporter zones-data.js</button>
+      <button class="tool" id="t-export-pnj">Exporter pnj-data.js</button>
+      <button class="tool" id="t-import">Importer…</button>
+      <button class="tool danger" id="t-reset">Abandonner le brouillon</button>
+      <input type="file" id="t-file" accept=".js,.json" hidden>
+      <div id="edit-status"></div>
+    </div>
+  </nav>
+</aside>
+
+<div id="side">
+<section id="info" class="frame" hidden aria-live="polite">
+  <button class="close" title="Fermer (Échap)">&times;</button>
+  <div id="info-view">
+    <div class="type"></div>
+    <h2></h2>
+    <p class="desc"></p>
+    <div class="meta"></div>
+  </div>
+  <form id="info-edit" hidden onsubmit="return false">
+    <div class="type" id="f-kind">Zone</div>
+    <label for="f-name">Nom</label>
+    <input id="f-name" maxlength="80">
+    <label for="f-type">Type</label>
+    <select id="f-type">
+      <option>Île</option><option>Ville</option><option>Donjon</option><option>Grotte</option>
+      <option>Forêt</option><option>Région</option><option>Quête</option><option>Zone</option>
+      <option value="__other">Autre…</option>
+    </select>
+    <label for="f-color">Couleur</label>
+    <input id="f-color" type="color">
+    <label for="f-desc">Description</label>
+    <textarea id="f-desc" maxlength="4000"></textarea>
+    <div class="meta" id="f-meta"></div>
+    <div class="row">
+      <button class="tool" type="button" id="f-done">Terminé</button>
+      <button class="tool danger" type="button" id="f-del">Supprimer</button>
+    </div>
+  </form>
+  <form id="pnj-edit" hidden onsubmit="return false">
+    <div class="type">PNJ</div>
+    <label for="p-name">Nom</label>
+    <input id="p-name" maxlength="80">
+    <label for="p-role">Rôle</label>
+    <select id="p-role">
+      <option>Marchand</option><option>Entraîneur</option><option>Quête</option><option>Garde</option>
+      <option>Prêtre</option><option>Banquier</option><option>Habitant</option>
+      <option value="__other">Autre…</option>
+    </select>
+    <label for="p-color">Couleur</label>
+    <input id="p-color" type="color">
+    <label for="p-desc">Description</label>
+    <textarea id="p-desc" maxlength="4000"></textarea>
+    <div class="meta" id="p-meta"></div>
+    <div class="row">
+      <button class="tool" type="button" id="p-done">Terminé</button>
+      <button class="tool danger" type="button" id="p-del">Supprimer</button>
+    </div>
+  </form>
+</section>
+<aside id="g-pnj" class="frame">
+  <button class="side-head" id="pnj-head" aria-expanded="true" aria-controls="pnj-body">PNJ <span class="n" id="n-pnj"></span></button>
+  <div id="pnj-body">
+    <input class="search" id="pnj-search" type="search" placeholder="Chercher un PNJ…" aria-label="Chercher un PNJ">
+    <ul id="pnj" class="list pnj"></ul>
+  </div>
+</aside>
+</div>
+
+<div id="coords" class="frame" aria-live="off">
+  <span class="world" id="c-world"></span>
+  <span class="xy" id="c-xy"><b>X</b>&ndash; &nbsp;<b>Y</b>&ndash;</span>
+  <span class="hint">clic : copier</span>
+</div>
+<div id="toast" class="frame" role="status"></div>
+<img id="grab" alt="">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="zones-data.js"></script>
+<script src="pnj-data.js"></script>
+<script>
+const CFG = {"maps": [{"id": "world0", "file": "v2_worldmap", "name": "Monde principal", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world1", "file": "v2_dungeonmap", "name": "Donjons", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world2", "file": "v2_cavernmap", "name": "Cavernes", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world3", "file": "v2_underworld", "name": "Underworld", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world4", "file": "v2_leoworld", "name": "Leoworld", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world5", "file": "v2_extension01", "name": "Extension 1", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world6", "file": "v2_extension02", "name": "Extension 2", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}, {"id": "world7", "file": "v2_extension03", "name": "Extension 3", "width": 12288, "height": 6144, "tile": 256, "maxZoom": 6, "ext": "webp", "scale": 0.125}], "cellW": 32, "cellH": 16, "cursor": {"hot": [0, 0], "anim": false}, "grab": {"hot": [0, 13], "anim": true}};
+const byId = Object.fromEntries(CFG.maps.map(m => [m.id, m]));
+
+const map = L.map('map', { crs: L.CRS.Simple, minZoom: 0, zoomSnap: 0.5,
+                           attributionControl: false, zoomControl: false });
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+let cur = null, layer = null, last = null;
+
+function bounds(m) {
+  return L.latLngBounds(map.unproject([0, m.height], m.maxZoom),
+                        map.unproject([m.width, 0], m.maxZoom));
+}
+// pixel du rendu <-> case du jeu (une case = 32x16 px natifs * echelle du rendu)
+function toGame(m, latlng) {
+  const p = map.project(latlng, m.maxZoom);
+  if (p.x < 0 || p.y < 0 || p.x >= m.width || p.y >= m.height) return null;
+  return { x: Math.floor(p.x / (CFG.cellW * m.scale)), y: Math.floor(p.y / (CFG.cellH * m.scale)) };
+}
+function fromGame(m, x, y) {
+  return map.unproject([(x + .5) * CFG.cellW * m.scale, (y + .5) * CFG.cellH * m.scale], m.maxZoom);
+}
+
+function show(id, view) {
+  const m = byId[id] || CFG.maps[0];
+  // garder la meme position en jeu en changeant de carte
+  const keep = !view && cur ? toGame(cur, map.getCenter()) : null;
+  const zoom = map.getZoom();
+  if (layer) map.removeLayer(layer);
+  cur = m;
+  const b = bounds(m);
+  layer = L.tileLayer(m.id + '/{z}/{x}/{y}.' + m.ext, {
+    tileSize: m.tile, minZoom: 0, maxNativeZoom: m.maxZoom, maxZoom: m.maxZoom + 2,
+    noWrap: true, bounds: b, keepBuffer: 2
+  }).addTo(map);
+  map.setMaxZoom(m.maxZoom + 2);
+  map.setMaxBounds(b.pad(0.1));
+  const target = view || (keep && { x: keep.x, y: keep.y, z: zoom });
+  if (target) map.setView(fromGame(m, target.x, target.y), target.z, { animate: false });
+  else map.fitBounds(b);
+
+  document.querySelectorAll('#maps button').forEach(btn =>
+    btn.setAttribute('aria-current', btn.dataset.id === m.id));
+  document.getElementById('c-world').textContent = m.name;
+  document.title = m.name + ' — Explorateur de cartes';
+  renderAll();
+  saveHash();
+}
+
+// Menu
+const list = document.getElementById('maps'), mapItems = {};
+for (const m of CFG.maps) {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.textContent = m.name; b.dataset.id = m.id; b.title = m.file;
+  b.onclick = () => { show(m.id); panel.classList.remove('open'); toggle.setAttribute('aria-expanded', false); };
+  li.appendChild(b); list.appendChild(li);
+  mapItems[m.id] = li;
+}
+const panel = document.getElementById('panel'), toggle = document.getElementById('toggle');
+toggle.onclick = () => toggle.setAttribute('aria-expanded', panel.classList.toggle('open'));
+
+// Coordonnees sous la souris
+const xy = document.getElementById('c-xy');
+function showXY(g) {
+  xy.innerHTML = g ? '<b>X</b>' + g.x + ' &nbsp;<b>Y</b>' + g.y : '<b>X</b>&ndash; &nbsp;<b>Y</b>&ndash;';
+}
+map.on('mousemove', e => { last = toGame(cur, e.latlng); showXY(last); });
+map.on('mouseout', () => showXY(null));
+
+// Clic : copie "X Y monde"
+const toast = document.getElementById('toast');
+let toastT;
+map.on('click', e => { if (!draw) copyAt(e.latlng); });   // pas en mode dessin de zone
+function copyAt(latlng) {
+  const g = toGame(cur, latlng);
+  if (!g) return;
+  showXY(g);
+  const txt = g.x + ', ' + g.y + ', ' + cur.id.replace('world', '');
+  const done = () => { toast.textContent = 'Copié : ' + txt; toast.classList.add('show');
+                       clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('show'), 1400); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, done); else done();
+}
+
+// Lien partageable : #world0/X/Y/zoom
+function saveHash() {
+  if (!cur) return;
+  const g = toGame(cur, map.getCenter()) || { x: 0, y: 0 };
+  history.replaceState(null, '', '#' + [cur.id, g.x, g.y, map.getZoom()].join('/'));
+}
+function readHash() {
+  const [id, x, y, z] = location.hash.slice(1).split('/');
+  if (!byId[id]) return null;
+  return { id, view: (x !== undefined && !isNaN(+x) && !isNaN(+y))
+                     ? { x: +x, y: +y, z: isNaN(+z) ? 3 : +z } : null };
+}
+map.on('moveend', saveHash);
+
+// Main du jeu animee pendant le glisser (souris uniquement ; pas au doigt)
+if (CFG.grab && CFG.grab.anim) {
+  const img = document.getElementById('grab'), [hx, hy] = CFG.grab.hot;
+  img.src = 'cursor-grab.webp';
+  let mouse = false;
+  const place = e => { img.style.transform = 'translate(' + (e.clientX - hx) + 'px,' + (e.clientY - hy) + 'px)'; };
+  document.addEventListener('pointerdown', e => { mouse = e.pointerType === 'mouse'; place(e); });
+  document.addEventListener('pointermove', place);
+  map.on('dragstart', () => { if (mouse) document.body.classList.add('grab-anim'); });
+  map.on('dragend', () => document.body.classList.remove('grab-anim'));
+}
+// ---------------------------------------------------------------- Donnees
+// zones-data.js -> window.ZONES = [{id, map, name, type, color, desc, points: [[x, y], ...]}]
+//   (points = coins de case du jeu, independants de l'echelle du rendu)
+//   type "Île" = ile : contour leger, listee sous sa carte ; les zones et PNJ dedans lui appartiennent
+// pnj-data.js   -> window.PNJ   = [{id, map, x, y, name, role, desc, color?}]   (x, y = case du jeu)
+// Edition : ouvrir index.html?edit (brouillon dans le navigateur, puis Exporter)
+const EDIT = new URLSearchParams(location.search).has('edit');
+const clone = a => JSON.parse(JSON.stringify(a || []));
+const F = id => document.getElementById(id);
+function loadDraft(key, fallback) {
+  if (EDIT) {
+    try { const d = JSON.parse(localStorage.getItem(key) || 'null'); if (Array.isArray(d)) return [d, true]; } catch (e) {}
+  }
+  return [clone(fallback), false];
+}
+let [zones, draftZ] = loadDraft('t4c-zones-draft', window.ZONES);
+let [pnjs, draftP] = loadDraft('t4c-pnj-draft', window.PNJ);
+
+map.createPane('isles').style.zIndex = 390;   // sous les zones : un clic dans une ville choisit la ville
+const zoneLayer = L.layerGroup().addTo(map), pnjLayer = L.layerGroup().addTo(map),
+      handleLayer = L.layerGroup().addTo(map);
+const shapes = new Map(), pins = new Map(), isleLabels = new Map();   // id -> polygone / marqueur / nom d'ile
+let selected = null, selP = null, hovered = null, draw = null, placing = false;
+
+function renderAll() { renderZones(); renderPnj(); }
+function corner(m, x, y) { return map.unproject([x * CFG.cellW * m.scale, y * CFG.cellH * m.scale], m.maxZoom); }
+function toCorner(m, ll) {
+  const p = map.project(ll, m.maxZoom);
+  return [Math.round(p.x / (CFG.cellW * m.scale)), Math.round(p.y / (CFG.cellH * m.scale))];
+}
+const byName = (a, b) => (a.name || '').localeCompare(b.name || '', 'fr');
+
+// Sections repliables : etat memorise
+{   // PNJ (colonne de droite) : replie / deplie
+  const g = F('g-pnj'), h = F('pnj-head');
+  const set = open => { g.classList.toggle('closed', !open); h.setAttribute('aria-expanded', open); };
+  const phone = matchMedia('(max-width: 640px)').matches;   // replie par defaut sur telephone
+  try { const v = localStorage.getItem('g-pnj'); set(v === null ? !phone : v !== '0'); } catch (e) { set(!phone); }
+  h.onclick = () => { const open = g.classList.contains('closed'); set(open);
+                      try { localStorage.setItem('g-pnj', open ? '1' : '0'); } catch (e) {} };
+}
+for (const id of ['g-zones']) {
+  const d = F(id);
+  try { d.open = localStorage.getItem(id) !== '0'; } catch (e) { d.open = true; }
+  d.addEventListener('toggle', () => { try { localStorage.setItem(id, d.open ? '1' : '0'); } catch (e) {} });
+}
+
+// ---------------------------------------------------------------- Zones
+function zoneStyle(z) {
+  const c = z.color || '#d4b06a', sel = selected === z, hov = hovered === z;
+  return { color: c, weight: sel || hov ? 2.5 : 1.5, opacity: .95, fillColor: c,
+           fillOpacity: sel ? .16 : hov ? .1 : 0, className: 'zone-poly' };   // 0 : reste survolable
+}
+function isleStyle(z) {   // ile : contour fin en pointilles, sans remplissage (sauf selectionnee)
+  const c = z.color || '#e8dcc0', sel = selected === z, hov = hovered === z;
+  return { color: c, weight: sel || hov ? 2.5 : 1.5, opacity: sel || hov ? .95 : .55, dashArray: '8 6',
+           fill: sel, fillColor: c, fillOpacity: .05, className: 'isle-poly' };
+}
+const styleOf = z => isIsle(z) ? isleStyle(z) : zoneStyle(z);
+function restyle() { for (const z of zones) { const p = shapes.get(z.id); if (p) p.setStyle(styleOf(z)); } }
+
+// Appartenance a une ile : point (en cases) dans le contour de l'ile
+const isIsle = z => z.type === 'Île';
+function inPoly(x, y, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const islesOf = mapId => zones.filter(z => isIsle(z) && z.map === mapId && z.points && z.points.length > 2).sort(byName);
+function isleAt(mapId, x, y) { return islesOf(mapId).find(i => inPoly(x, y, i.points)) || null; }
+function zoneIsle(z) {
+  if (isIsle(z) || !z.points || !z.points.length) return null;
+  const n = z.points.length;
+  return isleAt(z.map, z.points.reduce((s, p) => s + p[0], 0) / n, z.points.reduce((s, p) => s + p[1], 0) / n);
+}
+const pnjIsle = p => isleAt(p.map, p.x + .5, p.y + .5);
+
+function renderZones() {
+  zoneLayer.clearLayers(); shapes.clear(); isleLabels.clear();
+  if (selected && selected.map !== cur.id) closeInfo();
+  for (const z of zones) {
+    if (z.map !== cur.id || !z.points || z.points.length < 3) continue;
+    const isle = isIsle(z);
+    const poly = L.polygon(z.points.map(p => corner(cur, p[0], p[1])), Object.assign({ pane: isle ? 'isles' : 'overlayPane' }, styleOf(z)));
+    const lab = document.createElement('span'); lab.textContent = z.name || '';
+    const hover = on => { hovered = on ? z : null; restyle(); };
+    const click = e => { L.DomEvent.stopPropagation(e); select(z); copyAt(e.latlng); };
+    if (isle) {   // nom au-dessus du contour, centre
+      const b = poly.getBounds();
+      lab.style.setProperty('--c', z.color || '#e8dcc0');
+      const m = L.marker([b.getNorth(), b.getCenter().lng], { icon: L.divIcon({ className: 'isle-label', iconSize: null, html: lab }),
+                                                               keyboard: false, zIndexOffset: -1000 });
+      m.on('mouseover', () => hover(true)); m.on('mouseout', () => hover(false)); m.on('click', click);
+      m.addTo(zoneLayer);
+      isleLabels.set(z.id, m);
+    } else poly.bindTooltip(lab, { permanent: true, direction: 'center', className: 'zone-label', interactive: false });
+    poly.on('mouseover', () => hover(true));
+    poly.on('mouseout', () => hover(false));
+    poly.on('click', click);
+    poly.addTo(zoneLayer);
+    shapes.set(z.id, poly);
+  }
+  updateLabels(); renderZoneList();
+  if (selected) showHandles();
+}
+function labelEl(z) {
+  const m = isleLabels.get(z.id), p = shapes.get(z.id);
+  if (m) return m.getElement() && m.getElement().firstChild;
+  return p && p.getTooltip() && p.getTooltip().getElement();
+}
+// Nom affiche seulement si la zone (ou l'ile) est assez grande a l'ecran
+function updateLabels() {
+  for (const z of zones) {
+    const poly = shapes.get(z.id), el = poly && labelEl(z);
+    if (!el) continue;
+    const b = poly.getBounds();
+    const w = map.latLngToContainerPoint(b.getNorthEast()).x - map.latLngToContainerPoint(b.getSouthWest()).x;
+    el.style.display = w > Math.max(50, el.textContent.length * (isIsle(z) ? 13 : 7)) ? '' : 'none';
+  }
+}
+map.on('zoomend', updateLabels);
+
+function listButton(label, small, color, current, onclick) {
+  const li = document.createElement('li'), b = document.createElement('button');
+  const t = document.createElement('span'); t.textContent = label; b.appendChild(t);
+  if (small) { const s = document.createElement('small'); s.textContent = small; b.appendChild(s); }
+  b.style.setProperty('--c', color);
+  b.setAttribute('aria-current', current);
+  b.onclick = () => { onclick(); panel.classList.remove('open'); };
+  li.appendChild(b);
+  return li;
+}
+function hoverable(li, z) {
+  li.firstChild.onmouseenter = () => { hovered = z; restyle(); };
+  li.firstChild.onmouseleave = () => { hovered = null; restyle(); };
+  return li;
+}
+// Zones de la carte, regroupees par ile (les iles elles-memes sont sous la carte dans le menu)
+function renderZoneList() {
+  const ul = F('zones'); ul.innerHTML = '';
+  const mine = zones.filter(z => z.map === cur.id && !isIsle(z)).sort(byName);
+  F('g-zones').hidden = !mine.length && !EDIT;
+  F('n-zones').textContent = mine.length || '';
+  if (!mine.length) ul.innerHTML = '<li class="empty">Aucune zone sur cette carte</li>';
+  const groups = new Map(islesOf(cur.id).map(i => [i, []]));
+  groups.set(null, []);
+  for (const z of mine) groups.get(zoneIsle(z)).push(z);
+  const titled = groups.size > 1;
+  for (const [isle, list] of groups) {
+    if (!list.length) continue;
+    if (titled) {
+      const h = document.createElement('li'); h.className = 'isle-head';
+      h.textContent = isle ? isle.name || '(île sans nom)' : 'Hors île';
+      h.style.setProperty('--c', isle ? isle.color || '#e8dcc0' : 'var(--muted)');
+      ul.appendChild(h);
+    }
+    for (const z of list)
+      ul.appendChild(hoverable(listButton(z.name || '(sans nom)', z.type, z.color || '#d4b06a', selected === z, () => select(z, true)), z));
+  }
+  renderIsleMenu();
+}
+// Iles listees sous chaque carte du menu
+function renderIsleMenu() {
+  for (const m of CFG.maps) {
+    const li = mapItems[m.id], old = li.querySelector('.isles');
+    if (old) old.remove();
+    const isles = islesOf(m.id);
+    if (!isles.length) continue;
+    const ul = document.createElement('ul'); ul.className = 'list isles';
+    for (const i of isles)
+      ul.appendChild(hoverable(listButton(i.name || '(île sans nom)', '', i.color || '#e8dcc0', selected === i, () => {
+        if (cur.id !== m.id) show(m.id);
+        select(i, true);
+      }), i));
+    li.appendChild(ul);
+  }
+}
+
+// ---------------------------------------------------------------- PNJ
+const ROLE_COLORS = { 'Marchand': '#e0b24a', 'Entraîneur': '#5aa0e6', 'Quête': '#f0e05a', 'Garde': '#b9b9b9',
+                      'Prêtre': '#f4f4f4', 'Banquier': '#4fc38a', 'Habitant': '#c8a27a' };
+function roleColor(r) {
+  if (ROLE_COLORS[r]) return ROLE_COLORS[r];
+  let h = 0; for (const c of r || '') h = (h * 31 + c.charCodeAt(0)) % 360;
+  return 'hsl(' + h + ', 55%, 62%)';
+}
+const pnjColor = p => p.color || roleColor(p.role);   // couleur propre, sinon celle du role
+const LABEL_ZOOM = () => cur.maxZoom;   // noms permanents a partir de ce zoom
+let pnjLabelsOn = null;
+
+function pnjIcon(p) {
+  const sz = map.getZoom() >= cur.maxZoom - 2 ? 14 : 10;
+  return L.divIcon({ className: 'pnj-icon' + (selP === p ? ' sel' : ''), iconSize: [sz, sz],
+                     html: '<span style="--c:' + pnjColor(p) + '"></span>' });
+}
+function renderPnj() {
+  pnjLayer.clearLayers(); pins.clear();
+  if (selP && selP.map !== cur.id) closeInfo();
+  pnjLabelsOn = map.getZoom() >= LABEL_ZOOM();
+  for (const p of pnjs) {
+    if (p.map !== cur.id) continue;
+    const m = L.marker(fromGame(cur, p.x, p.y), { icon: pnjIcon(p), draggable: EDIT, keyboard: false,
+                                                  riseOnHover: true });
+    m.bindTooltip(p.name || '(sans nom)', { permanent: pnjLabelsOn, direction: 'top', offset: [0, -6],
+                                            className: 'pnj-label' });
+    m.on('click', e => { L.DomEvent.stopPropagation(e); selectPnj(p); copyAt(e.latlng); });
+    if (EDIT) m.on('dragend', () => {
+      const g = toGame(cur, m.getLatLng());
+      if (g) { p.x = g.x; p.y = g.y; saveDraft('pnj'); }
+      m.setLatLng(fromGame(cur, p.x, p.y));
+      if (selP === p) F('p-meta').textContent = pnjMeta(p);
+    });
+    m.addTo(pnjLayer);
+    pins.set(p.id, m);
+  }
+  renderPnjList();
+}
+map.on('zoomend', () => {
+  if (!cur) return;
+  if ((map.getZoom() >= LABEL_ZOOM()) !== pnjLabelsOn) renderPnj();
+  else for (const p of pnjs) { const m = pins.get(p.id); if (m) m.setIcon(pnjIcon(p)); }
+});
+function refreshPin(p) { const m = pins.get(p && p.id); if (m) m.setIcon(pnjIcon(p)); }
+
+function renderPnjList() {
+  const ul = F('pnj'); ul.innerHTML = '';
+  const q = F('pnj-search').value.trim().toLowerCase();
+  const mine = pnjs.filter(p => p.map === cur.id);
+  const shown = mine.filter(p => !q || (p.name + ' ' + (p.role || '') + ' ' + (p.desc || '')).toLowerCase().includes(q)).sort(byName);
+  F('g-pnj').hidden = !mine.length && !EDIT;
+  F('n-pnj').textContent = mine.length || '';
+  F('pnj-search').hidden = mine.length < 8;
+  if (!shown.length) ul.innerHTML = '<li class="empty">' + (mine.length ? 'Aucun résultat' : 'Aucun PNJ sur cette carte') + '</li>';
+  for (const p of shown) ul.appendChild(listButton(p.name || '(sans nom)', p.role, pnjColor(p), selP === p,
+                                                   () => selectPnj(p, true)));
+  const on = ul.querySelector('[aria-current="true"]');
+  if (on) on.scrollIntoView({ block: 'nearest' });
+}
+F('pnj-search').addEventListener('input', renderPnjList);
+
+// ---------------------------------------------------------------- Fiche
+const info = F('info'), vView = F('info-view');
+function zoneMeta(z) {
+  const xs = z.points.map(p => p[0]), ys = z.points.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  let s = 'Centre ' + Math.round((x0 + x1) / 2) + ', ' + Math.round((y0 + y1) / 2) +
+          ' · ' + (x1 - x0) + '×' + (y1 - y0) + ' cases';
+  if (isIsle(z)) {
+    const nz = zones.filter(o => o.map === z.map && zoneIsle(o) === z).length;
+    const np = pnjs.filter(p => p.map === z.map && inPoly(p.x + .5, p.y + .5, z.points)).length;
+    s += '\n' + nz + ' zone' + (nz > 1 ? 's' : '') + ' · ' + np + ' PNJ';
+  } else { const i = zoneIsle(z); if (i) s = 'Île : ' + (i.name || '?') + '\n' + s; }
+  return s;
+}
+function pnjMeta(p) {
+  const i = pnjIsle(p);
+  return (i ? 'Île : ' + (i.name || '?') + '\n' : '') + 'Position ' + p.x + ', ' + p.y;
+}
+function openCard(form) {   // form = 'info-edit' | 'pnj-edit' | null (lecture)
+  info.hidden = false;
+  vView.hidden = !!form;
+  F('info-edit').hidden = form !== 'info-edit';
+  F('pnj-edit').hidden = form !== 'pnj-edit';
+}
+function fillView(type, name, desc, meta) {
+  vView.querySelector('.type').textContent = type || '';
+  vView.querySelector('h2').textContent = name || '';
+  // texte brut ; les liens http(s) deviennent cliquables (pas de HTML injecte)
+  const d = vView.querySelector('.desc'); d.textContent = '';
+  (desc || '').split(/(https?:\/\/[^\s<>"]+)/).forEach((part, i) => {
+    if (i % 2) {
+      const a = document.createElement('a');
+      a.href = part; a.textContent = part; a.target = '_blank'; a.rel = 'noopener';
+      d.appendChild(a);
+    } else d.appendChild(document.createTextNode(part));
+  });
+  vView.querySelector('.meta').textContent = meta;
+}
+function select(z, fly) {
+  const old = selP; selP = null; refreshPin(old);
+  selected = z; restyle(); renderZoneList(); renderPnjList();
+  openCard(EDIT ? 'info-edit' : null);
+  if (EDIT) {
+    F('f-kind').textContent = isIsle(z) ? 'Île' : 'Zone';
+    F('f-name').value = z.name || ''; setOpt(F('f-type'), z.type || 'Zone');
+    F('f-color').value = z.color || (isIsle(z) ? '#e8dcc0' : '#d4b06a'); F('f-desc').value = z.desc || '';
+    F('f-meta').textContent = zoneMeta(z);
+    showHandles();
+  } else fillView(z.type, z.name, z.desc, zoneMeta(z));
+  const p = shapes.get(z.id);
+  if (fly && p) map.fitBounds(p.getBounds(), { padding: [60, 60], maxZoom: cur.maxZoom });
+}
+function selectPnj(p, fly) {
+  const old = selP;
+  selected = null; handleLayer.clearLayers(); restyle(); renderZoneList();
+  selP = p; refreshPin(old); refreshPin(p); renderPnjList();
+  openCard(EDIT ? 'pnj-edit' : null);
+  if (EDIT) {
+    F('p-name').value = p.name || ''; setOpt(F('p-role'), p.role || 'Habitant');
+    F('p-desc').value = p.desc || ''; F('p-meta').textContent = pnjMeta(p);
+    F('p-color').value = /^#[0-9a-f]{6}$/i.test(pnjColor(p)) ? pnjColor(p) : '#d4b06a';
+  } else fillView(p.role, p.name, p.desc, pnjMeta(p));
+  if (fly) map.setView(fromGame(cur, p.x, p.y), Math.max(map.getZoom(), cur.maxZoom));
+}
+function setOpt(sel, t) {   // ajoute les valeurs libres deja utilisees a la liste
+  if (![...sel.options].some(o => o.value === t)) {
+    const o = document.createElement('option'); o.textContent = t;
+    sel.insertBefore(o, sel.lastElementChild);
+  }
+  sel.value = t;
+}
+function closeInfo() {
+  const old = selP;
+  selected = null; selP = null; info.hidden = true; handleLayer.clearLayers();
+  restyle(); refreshPin(old); renderZoneList(); renderPnjList();
+}
+info.querySelector('.close').onclick = closeInfo;
+
+// ---------------------------------------------------------------- Edition
+function saveDraft(kind) {
+  try {
+    if (kind === 'pnj') { draftP = true; localStorage.setItem('t4c-pnj-draft', JSON.stringify(pnjs)); }
+    else { draftZ = true; localStorage.setItem('t4c-zones-draft', JSON.stringify(zones)); }
+  } catch (e) {}
+  editStatus();
+}
+function editStatus(msg) {
+  if (!EDIT) return;
+  const part = (n, what, d) => n + ' ' + what + (d ? ' (brouillon non exporté)' : '');
+  F('edit-status').textContent = msg || part(zones.length, 'zones', draftZ) + ' · ' + part(pnjs.length, 'PNJ', draftP);
+}
+
+// Poignees : sommets deplacables (clic droit = supprimer), milieux = ajouter un point
+function showHandles() {
+  handleLayer.clearLayers();
+  const z = selected, poly = z && shapes.get(z.id);
+  if (!EDIT || !poly) return;
+  const vtx = cls => L.divIcon({ className: 'vtx' + (cls ? ' ' + cls : ''), iconSize: cls === 'mid' ? [9, 9] : [12, 12] });
+  const changed = () => {
+    poly.setLatLngs(z.points.map(p => corner(cur, p[0], p[1]))); F('f-meta').textContent = zoneMeta(z); saveDraft();
+    const lab = isleLabels.get(z.id), b = poly.getBounds();
+    if (lab) lab.setLatLng([b.getNorth(), b.getCenter().lng]);
+    renderZoneList();   // une zone peut changer d'ile
+  };
+  z.points.forEach((pt, i) => {
+    const m = L.marker(corner(cur, pt[0], pt[1]), { icon: vtx(), draggable: true, keyboard: false }).addTo(handleLayer);
+    m.on('drag', e => { z.points[i] = toCorner(cur, e.target.getLatLng()); poly.setLatLngs(z.points.map(p => corner(cur, p[0], p[1]))); });
+    m.on('dragend', () => { changed(); showHandles(); updateLabels(); });
+    m.on('contextmenu', e => {
+      L.DomEvent.preventDefault(e.originalEvent);
+      if (z.points.length > 3) { z.points.splice(i, 1); changed(); showHandles(); }
+    });
+    const nx = z.points[(i + 1) % z.points.length];
+    const mid = L.marker(corner(cur, (pt[0] + nx[0]) / 2, (pt[1] + nx[1]) / 2), { icon: vtx('mid'), keyboard: false }).addTo(handleLayer);
+    mid.on('click', e => {
+      L.DomEvent.stopPropagation(e);
+      z.points.splice(i + 1, 0, [Math.round((pt[0] + nx[0]) / 2), Math.round((pt[1] + nx[1]) / 2)]);
+      changed(); showHandles();
+    });
+  });
+}
+
+function startDraw(isle) {
+  stopPlacing(); closeInfo();
+  draw = { isle: isle === true, points: [], line: L.polyline([], { color: '#2fb79c', weight: 2, dashArray: '5 5', interactive: false }).addTo(map),
+           marks: L.layerGroup().addTo(map), ghost: null };
+  map.doubleClickZoom.disable();
+  map.getContainer().classList.add('drawing');
+  editStatus('Clic : ajouter un point · double-clic, Entrée ou clic sur le 1er point : terminer · Retour arrière : enlever le dernier · Échap : abandonner');
+}
+function redrawLine() {
+  const pts = draw.points.map(p => corner(cur, p[0], p[1]));
+  if (draw.ghost) pts.push(corner(cur, draw.ghost[0], draw.ghost[1]));
+  draw.line.setLatLngs(pts);
+  draw.marks.clearLayers();
+  draw.points.forEach((p, i) => {
+    const m = L.marker(corner(cur, p[0], p[1]), {
+      icon: L.divIcon({ className: 'vtx' + (i === 0 ? ' first' : ''), iconSize: [12, 12] }), keyboard: false
+    }).addTo(draw.marks);
+    if (i === 0) m.on('click', e => { L.DomEvent.stopPropagation(e); finishDraw(); });
+  });
+}
+function endDraw() {
+  map.removeLayer(draw.line); map.removeLayer(draw.marks); draw = null;
+  map.doubleClickZoom.enable();
+  map.getContainer().classList.remove('drawing');
+  editStatus();
+}
+function finishDraw() {
+  const pts = draw.points, isle = draw.isle;
+  endDraw();
+  if (pts.length < 3) return;
+  const z = { id: 'z' + Date.now().toString(36), map: cur.id, name: isle ? 'Nouvelle île' : 'Nouvelle zone',
+              type: isle ? 'Île' : 'Zone', color: isle ? '#e8dcc0' : '#d4b06a', desc: '', points: pts };
+  zones.push(z); saveDraft(); renderZones(); select(z);
+  F('f-name').select(); F('f-name').focus();
+}
+
+// Placement d'un PNJ : le prochain clic sur la carte le pose
+function startPlacing() {
+  if (draw) endDraw();
+  closeInfo(); placing = true;
+  map.getContainer().classList.add('drawing');
+  editStatus('Clique sur la carte pour poser le PNJ · Échap : annuler');
+}
+function stopPlacing() {
+  if (!placing) return;
+  placing = false; map.getContainer().classList.remove('drawing'); editStatus();
+}
+
+map.on('click', e => {
+  if (placing) {
+    const g = toGame(cur, e.latlng);
+    stopPlacing();
+    if (!g) return;
+    const p = { id: 'p' + Date.now().toString(36), map: cur.id, x: g.x, y: g.y,
+                name: 'Nouveau PNJ', role: 'Habitant', desc: '' };
+    pnjs.push(p); saveDraft('pnj'); renderPnj(); selectPnj(p);
+    F('p-name').select(); F('p-name').focus();
+    return;
+  }
+  if (!draw) return;
+  const c = toCorner(cur, e.latlng), last = draw.points[draw.points.length - 1];
+  if (!last || last[0] !== c[0] || last[1] !== c[1]) draw.points.push(c);
+  redrawLine();
+});
+map.on('dblclick', () => { if (draw) finishDraw(); });
+map.on('mousemove', e => { if (draw) { draw.ghost = toCorner(cur, e.latlng); redrawLine(); } });
+document.addEventListener('keydown', e => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (draw) {
+    if (e.key === 'Enter') finishDraw();
+    else if (e.key === 'Escape') endDraw();
+    else if (e.key === 'Backspace' && !typing) { draw.points.pop(); redrawLine(); e.preventDefault(); }
+  } else if (placing && e.key === 'Escape') stopPlacing();
+  else if (e.key === 'Escape' && !info.hidden) closeInfo();
+});
+
+// Liste fixe + « Autre… » (valeur libre, ajoutee a la liste)
+function bindChoice(sel, get, set) {
+  sel.addEventListener('change', () => {
+    if (!get()) return;
+    let t = sel.value;
+    if (t === '__other') {
+      t = (prompt('Nouvelle valeur :', '') || '').trim().slice(0, 40);
+      if (!t) { setOpt(sel, get()[set] || ''); return; }
+      setOpt(sel, t);
+    }
+    get()[set] = t;
+    return t;
+  });
+}
+function download(name, varName, data) {
+  const txt = '// Genere par index.html?edit\nwindow.' + varName + ' = ' + JSON.stringify(data, null, 1) + ';\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/javascript' }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  editStatus('Exporté : remplace site/' + name + ' par le fichier téléchargé.');
+}
+
+if (EDIT) {
+  F('edit-tools').hidden = false;
+  editStatus();
+  // Zones
+  bindChoice(F('f-type'), () => selected, 'type');
+  F('f-type').addEventListener('change', () => {   // passer en / hors « Île » change le dessin
+    if (!selected) return;
+    saveDraft(); renderZones();
+    F('f-kind').textContent = isIsle(selected) ? 'Île' : 'Zone'; F('f-meta').textContent = zoneMeta(selected);
+  });
+  for (const [id, key] of [['f-name', 'name'], ['f-color', 'color'], ['f-desc', 'desc']]) {
+    F(id).addEventListener('input', () => {
+      if (!selected) return;
+      selected[key] = F(id).value; saveDraft();
+      const el = labelEl(selected);
+      if (key === 'name' && el) { el.textContent = selected.name; updateLabels(); }
+      if (key === 'color') { restyle(); if (el && isIsle(selected)) el.style.setProperty('--c', selected.color); }
+      if (key === 'name' && isIsle(selected)) F('f-meta').textContent = zoneMeta(selected);
+      if (key !== 'desc') renderZoneList();
+    });
+  }
+  F('f-done').onclick = closeInfo;
+  F('f-del').onclick = () => {
+    if (!selected || !confirm('Supprimer « ' + (selected.name || 'zone') + ' » ?')) return;
+    zones = zones.filter(z => z !== selected); closeInfo(); saveDraft(); renderZones();
+  };
+  // PNJ
+  bindChoice(F('p-role'), () => selP, 'role');
+  F('p-role').addEventListener('change', () => { if (selP) { saveDraft('pnj'); refreshPin(selP); renderPnjList(); } });
+  for (const [id, key] of [['p-name', 'name'], ['p-desc', 'desc'], ['p-color', 'color']]) {
+    F(id).addEventListener('input', () => {
+      if (!selP) return;
+      selP[key] = F(id).value; saveDraft('pnj');
+      if (key === 'name') { const m = pins.get(selP.id); if (m) m.setTooltipContent(selP.name || '(sans nom)'); renderPnjList(); }
+      if (key === 'color') { refreshPin(selP); renderPnjList(); }
+    });
+  }
+  F('p-done').onclick = closeInfo;
+  F('p-del').onclick = () => {
+    if (!selP || !confirm('Supprimer « ' + (selP.name || 'PNJ') + ' » ?')) return;
+    pnjs = pnjs.filter(p => p !== selP); closeInfo(); saveDraft('pnj'); renderPnj();
+  };
+  // Outils
+  F('t-new').onclick = () => startDraw(false);
+  F('t-new-isle').onclick = () => startDraw(true);
+  F('t-new-pnj').onclick = startPlacing;
+  F('t-export').onclick = () => download('zones-data.js', 'ZONES', zones);
+  F('t-export-pnj').onclick = () => download('pnj-data.js', 'PNJ', pnjs);
+  F('t-import').onclick = () => F('t-file').click();
+  F('t-file').onchange = async () => {
+    const f = F('t-file').files[0]; if (!f) return;
+    try {   // zones-data.js / pnj-data.js / .json : on garde le tableau [...]
+      const txt = await f.text();
+      const d = JSON.parse(txt.slice(txt.indexOf('['), txt.lastIndexOf(']') + 1));
+      if (!Array.isArray(d)) throw new Error('pas une liste');
+      const isPnj = /window\.PNJ\b/.test(txt) || (d.length && 'x' in d[0] && !('points' in d[0]));
+      closeInfo();
+      if (isPnj) { pnjs = d; saveDraft('pnj'); } else { zones = d; saveDraft(); }
+      renderAll();
+    } catch (err) { editStatus('Import impossible : ' + err.message); }
+    F('t-file').value = '';
+  };
+  F('t-reset').onclick = () => {
+    if (!confirm('Revenir au contenu de zones-data.js et pnj-data.js ? Les modifications non exportées seront perdues.')) return;
+    try { localStorage.removeItem('t4c-zones-draft'); localStorage.removeItem('t4c-pnj-draft'); } catch (e) {}
+    zones = clone(window.ZONES); pnjs = clone(window.PNJ); draftZ = draftP = false;
+    closeInfo(); renderAll(); editStatus();
+  };
+}
+
+window.addEventListener('hashchange', () => { const h = readHash(); if (h) show(h.id, h.view); });
+
+const start = readHash();
+show(start ? start.id : CFG.maps[0].id, start && start.view);
+</script>
+</body>
+</html>

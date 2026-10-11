@@ -1,0 +1,16 @@
+{
+  "cursor": {
+    "hot": [
+      0,
+      0
+    ],
+    "anim": false
+  },
+  "cursor-grab": {
+    "hot": [
+      0,
+      13
+    ],
+    "anim": true
+  }
+}

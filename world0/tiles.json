@@ -1,0 +1,12 @@
+{
+  "width": 12288,
+  "height": 6144,
+  "tile": 256,
+  "maxZoom": 6,
+  "ext": "webp",
+  "scale": 0.33,
+  "x0": 0,
+  "y0": 0,
+  "cellW": 32,
+  "cellH": 16
+}
