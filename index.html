@@ -47,6 +47,37 @@
                   gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--edge); }
   #panel h1 { margin: 0; font: 700 15px/1.2 var(--title); letter-spacing: .06em;
               color: var(--edge-hi); text-transform: uppercase; }
+  #panel h1 { flex: 1; }
+  #help-btn { flex: none; width: 30px; height: 30px; border: 1px solid var(--edge); border-radius: 50%;
+              background: none; color: var(--edge-hi); font: 700 15px/1 var(--title); }
+  #help-btn:hover { background: rgba(212,176,106,.16); color: #fff; }
+  #help-btn:focus-visible, #help .x:focus-visible, #help .btn:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+  /* Aide : comment contribuer (zones, PNJ, envoi des fichiers) */
+  #help { width: min(560px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 24px); padding: 0; color: var(--text);
+          background: var(--panel-solid); overflow: hidden; }
+  #help[open] { display: flex; flex-direction: column; }
+  #help::backdrop { background: rgba(0,0,0,.6); }
+  #help header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--edge); }
+  #help h2 { flex: 1; margin: 0; font: 700 17px/1.2 var(--title); letter-spacing: .05em; color: var(--edge-hi); }
+  #help .x { width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
+  #help .x:hover { color: #fff; }
+  #help .body { overflow-y: auto; padding: 4px 18px 16px; scrollbar-width: thin; scrollbar-color: var(--edge) transparent; }
+  #help h3 { display: flex; align-items: center; gap: 8px; margin: 16px 0 6px; font: 700 14px var(--title);
+             letter-spacing: .05em; color: var(--edge-hi); }
+  #help h3 b { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--edge);
+               border-radius: 50%; color: var(--gem); font: 700 12px var(--ui); }
+  #help p, #help ul { margin: 4px 0; }
+  #help ul { padding-left: 20px; }
+  #help li { margin: 3px 0; }
+  #help kbd { padding: 0 5px; border: 1px solid var(--edge); border-radius: 3px; background: #0b0907;
+              font: 12px ui-monospace, Consolas, monospace; }
+  #help em { color: #fff; font-style: normal; font-weight: 600; }
+  #help .note { color: var(--muted); font-size: 13px; }
+  #help .btn { display: inline-block; margin: 6px 6px 2px 0; padding: 7px 12px; border: 1px solid var(--edge);
+               border-radius: 2px; background: rgba(47,183,156,.14); color: #fff; font: 13px var(--ui);
+               text-decoration: none; cursor: pointer; }
+  #help .btn:hover { background: rgba(47,183,156,.28); border-color: var(--gem); }
+  #help .mail { color: var(--gem); font-weight: 600; word-break: break-all; }
   #toggle { display: none; background: none; border: 1px solid var(--edge); color: var(--text);
             width: 30px; height: 30px; border-radius: 3px; font-size: 16px; line-height: 1; }
   #panel nav { overflow-y: auto; padding: 6px; }
@@ -225,6 +256,7 @@
 <aside id="panel" class="frame">
   <header>
     <h1>Cartes</h1>
+    <button id="help-btn" type="button" title="Aide : contribuer à la carte" aria-haspopup="dialog">?</button>
     <button id="toggle" aria-expanded="false" aria-controls="maps-nav" title="Menu">&#9776;</button>
   </header>
   <nav id="maps-nav">
@@ -327,6 +359,53 @@
   <span class="xy" id="c-xy"><b>X</b>&ndash; &nbsp;<b>Y</b>&ndash;</span>
   <span class="hint">clic : copier</span>
 </div>
+<dialog id="help" class="frame" aria-labelledby="help-title">
+  <header>
+    <h2 id="help-title">Contribuer à la carte</h2>
+    <button class="x" type="button" title="Fermer (Échap)" aria-label="Fermer">&times;</button>
+  </header>
+  <div class="body">
+    <p>Tu peux dessiner des zones et des îles, et placer des PNJ, puis nous envoyer tes ajouts.</p>
+
+    <h3><b>1</b> Ouvrir le mode édition</h3>
+    <p id="help-edit-off">Le mode édition ajoute les outils dans le menu de gauche (section <em>Édition</em>).</p>
+    <p id="help-edit-on" hidden>Tu es déjà en mode édition : les outils sont dans le menu de gauche (section <em>Édition</em>).</p>
+    <a class="btn" id="help-edit-link" href="?edit">Ouvrir le mode édition</a>
+
+    <h3><b>2</b> Dessiner une zone ou une île</h3>
+    <ul>
+      <li>Clique <em>+ Nouvelle zone</em>, ou <em>+ Nouvelle île</em> pour le contour d'une île entière.</li>
+      <li>Clique sur la carte pour poser chaque coin. <kbd>Retour arrière</kbd> enlève le dernier point.</li>
+      <li>Pour terminer : double-clic, <kbd>Entrée</kbd> ou clic sur le premier point. <kbd>Échap</kbd> abandonne.</li>
+      <li>Remplis la fiche à droite : nom, type, couleur, description.</li>
+      <li>Pour corriger une zone, clique-la puis glisse ses points.</li>
+    </ul>
+
+    <h3><b>3</b> Ajouter un PNJ</h3>
+    <ul>
+      <li>Clique <em>+ Nouveau PNJ</em>, puis clique sur la carte à sa place.</li>
+      <li>Remplis sa fiche : nom, rôle, description. Coche <em>Se déplace</em> s'il se promène.</li>
+      <li>Pour le déplacer : glisse son point, utilise <em>Déplacer…</em> ou tape X / Y.</li>
+      <li>Les coordonnées X, Y sont affichées en bas de l'écran sous la souris.</li>
+    </ul>
+
+    <h3><b>4</b> Télécharger tes ajouts</h3>
+    <p>Ton travail est gardé automatiquement dans ce navigateur, mais personne d'autre ne le voit.
+       Quand tu as fini, clique dans le menu de gauche :</p>
+    <ul>
+      <li><em>Exporter zones-data.js</em> (zones et îles)</li>
+      <li><em>Exporter pnj-data.js</em> (PNJ)</li>
+    </ul>
+    <p class="note">Les deux fichiers arrivent dans ton dossier Téléchargements.</p>
+
+    <h3><b>5</b> Nous les envoyer</h3>
+    <p>Envoie les deux fichiers <em>.js</em> en pièces jointes à
+       <a class="mail" href="mailto:ericwebprogrammer@gmail.com">ericwebprogrammer@gmail.com</a>.</p>
+    <a class="btn" id="help-mail" href="mailto:ericwebprogrammer@gmail.com?subject=Carte%20T4C%20%E2%80%93%20ajouts%20zones%20et%20PNJ&body=Bonjour%2C%0A%0AVoici%20mes%20ajouts%20pour%20la%20carte%20(zones-data.js%20et%20pnj-data.js%20en%20pi%C3%A8ces%20jointes).%0A%0A">Écrire le courriel</a>
+    <button class="btn" type="button" id="help-copy">Copier l'adresse</button>
+    <p class="note">Le courriel ne joint pas les fichiers tout seul : ajoute-les toi-même avant d'envoyer.</p>
+  </div>
+</dialog>
 <div id="toast" class="frame" role="status"></div>
 <img id="grab" alt="">
 
@@ -1068,6 +1147,22 @@ if (EDIT) {
     closeInfo(); renderAll(); editStatus();
   };
 }
+
+// Aide : ouvrir / fermer, lien vers ?edit (en gardant la vue actuelle)
+const help = F('help');
+F('help-btn').onclick = () => {
+  F('help-edit-off').hidden = EDIT; F('help-edit-on').hidden = !EDIT;
+  F('help-edit-link').textContent = EDIT ? 'Revenir à la carte normale' : 'Ouvrir le mode édition';
+  F('help-edit-link').href = location.pathname + (EDIT ? '' : '?edit') + location.hash;
+  help.showModal();
+};
+help.querySelector('.x').onclick = () => help.close();
+help.addEventListener('click', e => { if (e.target === help) help.close(); });   // clic hors de la fenetre
+F('help-copy').onclick = () => {
+  const b = F('help-copy');   // (le toast est sous la fenetre modale : on change le bouton)
+  const done = () => { b.textContent = 'Adresse copiée ✓'; setTimeout(() => b.textContent = "Copier l'adresse", 1600); };
+  if (navigator.clipboard) navigator.clipboard.writeText('ericwebprogrammer@gmail.com').then(done, done); else done();
+};
 
 window.addEventListener('hashchange', () => { const h = readHash(); if (h) show(h.id, h.view); });
 
