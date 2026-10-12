@@ -1873,12 +1873,13 @@ window.PNJ = [
  {
   "id": "pgr187",
   "map": "world6",
-  "x": 1562,
-  "y": 1890,
+  "x": 79,
+  "y": 1458,
   "name": "Boadicée, la Maîtresse des flux",
   "role": "",
   "desc": "Accès EH",
-  "color": "#6cefb6"
+  "color": "#6cefb6",
+  "move": 33
  },
  {
   "id": "pgr188",
@@ -1993,22 +1994,24 @@ window.PNJ = [
  {
   "id": "pgr199",
   "map": "world6",
-  "x": 1562,
-  "y": 1890,
+  "x": 81,
+  "y": 1446,
   "name": "Eirik, le Maître de la Terre",
   "role": "",
   "desc": "Accès EH",
-  "color": "#e77c74"
+  "color": "#e77c74",
+  "move": 37
  },
  {
   "id": "pgr200",
   "map": "world6",
-  "x": 1562,
-  "y": 1890,
+  "x": 78,
+  "y": 1451,
   "name": "Eolia, la Maîtresse des Vents",
   "role": "",
   "desc": "Accès EH",
-  "color": "#26d967"
+  "color": "#26d967",
+  "move": 31
  },
  {
   "id": "pgr201",
@@ -2123,12 +2126,13 @@ window.PNJ = [
  {
   "id": "pgr213",
   "map": "world6",
-  "x": 1562,
-  "y": 1890,
+  "x": 83,
+  "y": 1449,
   "name": "Osrik, le Maître de l'Ether",
   "role": "",
   "desc": "Accès EH",
-  "color": "#3eea59"
+  "color": "#3eea59",
+  "move": 33
  },
  {
   "id": "pgr214",
@@ -2263,12 +2267,13 @@ window.PNJ = [
  {
   "id": "pgr227",
   "map": "world6",
-  "x": 1562,
-  "y": 1890,
+  "x": 83,
+  "y": 1456,
   "name": "Wilhjelm, le Mâitre de l'Esprit",
   "role": "",
   "desc": "Accès EH",
-  "color": "#5126d9"
+  "color": "#5126d9",
+  "move": 39
  },
  {
   "id": "pgr228",
@@ -4187,5 +4192,15 @@ window.PNJ = [
   "name": "Ephriarc",
   "role": "Quête",
   "desc": "Alentours de la place des deux étangs. Quête du culte de l'oeil noir."
+ },
+ {
+  "id": "pmv4af8my",
+  "map": "world6",
+  "x": 171,
+  "y": 775,
+  "name": "Thorbjorn, le Scalde",
+  "role": "Quête",
+  "desc": "Quête des Veuves",
+  "move": 29
  }
 ];

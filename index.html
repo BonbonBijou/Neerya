@@ -25,6 +25,9 @@
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
                font: 14px/1.4 var(--ui); overflow: hidden; }
   #map { position: absolute; inset: 0; background: var(--bg); }
+  /* Au-dela du zoom max, le navigateur agrandit chaque tuile separement : le lissage
+     s'arrete au bord de la tuile et laisse une ligne a chaque jointure. Pixels nets = pas de ligne. */
+  #map.overzoom .leaflet-tile { image-rendering: pixelated; }
   .leaflet-container { background: var(--bg); font: inherit; }
 
   /* Curseurs du jeu */
@@ -116,11 +119,29 @@
   .list.pnj button::before { border-radius: 50%; transform: none; background: var(--c); border-color: rgba(0,0,0,.6); }
   .list button small { margin-left: auto; padding-left: 6px; color: var(--muted); font-size: 11px; white-space: nowrap; }
   .list button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list.pnj button.away > span { color: var(--muted); }   /* PNJ d'une autre carte */
 
   /* PNJ */
   .pnj-icon span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--c);
                    border: 2px solid #1a140c; box-shadow: 0 0 0 1px var(--c), 0 1px 3px #000; }
   .pnj-icon.sel span { box-shadow: 0 0 0 2px #fff, 0 0 10px var(--c); }
+  /* PNJ qui se deplace : anneau en pointilles qui tourne */
+  /* PNJ qui se deplace : petite botte dans le rond */
+  .pnj-icon.moving span { position: relative; }
+  .pnj-icon.moving span::after { content: ''; position: absolute; inset: 12%;
+                                 background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23fff' stroke='%231a140c' stroke-width='1.2' stroke-linejoin='round' paint-order='stroke' d='M4.5 1.5h5.5v7l3.6 1.6c1 .45 1.4 1.1 1.4 2V14H4.5v-1.2C3.6 11 3.5 9 4.5 7.5z'/%3E%3Cpath fill='%23fff' stroke='%231a140c' stroke-width='1' paint-order='stroke' d='M4 14.2h11v1.3H4z'/%3E%3C/svg%3E") center / contain no-repeat; }
+  #info label.check { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--text); font-size: 13px; }
+  #info label.check input { width: auto; margin: 0; accent-color: var(--gem); }
+  #info .inline input { width: 90px; }
+  #info .pos { display: flex; gap: 6px; align-items: center; }
+  #info .pos input { width: 0; flex: 1 1 0; min-width: 0; }
+  #info .pos b { color: var(--muted); font-weight: 400; font-size: 12px; }
+  #info .pos .tool { width: auto; flex: none; margin: 0; padding: 6px 9px; }
+  #info .tool.on { background: rgba(47,183,156,.22); border-color: var(--gem); color: #fff; }
+  #info .hint { margin: 4px 0 0; color: var(--gem); font-size: 12px; }
+  /* pose / deplacement d'un PNJ : apercu qui suit la souris */
+  .pnj-icon.ghost { opacity: .75; pointer-events: none; }
+  .pnj-icon.ghost span { box-shadow: 0 0 0 2px #fff, 0 0 12px var(--c); }
   .pnj-label { background: rgba(20,17,13,.85); border: 1px solid var(--edge); border-radius: 2px;
                color: var(--text); font: 600 12px var(--ui); padding: 1px 6px; box-shadow: none; }
   .pnj-label::before { display: none; }
@@ -133,7 +154,9 @@
                 font: 700 13px/1.1 var(--title); letter-spacing: .05em; white-space: nowrap;
                 text-shadow: 0 0 2px #000, 0 0 5px #000, 0 1px 2px #000; }
   .zone-label::before { display: none; }
-  .drawing .zone-poly, .drawing .isle-poly, .drawing .isle-label { pointer-events: none; }
+  /* plus specifique que la regle Leaflet « .leaflet-pane > svg path.leaflet-interactive » */
+  .leaflet-container.drawing path.zone-poly, .leaflet-container.drawing path.isle-poly,
+  .drawing .isle-label { pointer-events: none; }
   .list.zones .isle-head { margin: 8px 6px 2px; color: var(--c); font: 500 11px var(--title);
                            letter-spacing: .1em; text-transform: uppercase; }
   .list.zones .isle-head:first-child { margin-top: 2px; }
@@ -265,10 +288,24 @@
       <option>Prêtre</option><option>Banquier</option><option>Habitant</option>
       <option value="__other">Autre…</option>
     </select>
+    <label class="check"><input type="checkbox" id="p-move"> Se déplace</label>
+    <div id="p-move-box" hidden>
+      <label for="p-move-n">Zone de déplacement (côté en cases, centrée sur le PNJ)</label>
+      <div class="inline"><input id="p-move-n" type="number" min="1" max="199" step="2" value="15"></div>
+    </div>
     <label for="p-color">Couleur</label>
     <input id="p-color" type="color">
     <label for="p-desc">Description</label>
     <textarea id="p-desc" maxlength="4000"></textarea>
+    <label for="p-x">Position</label>
+    <div class="pos">
+      <b>X</b><input id="p-x" type="number" min="0" max="3071" step="1">
+      <b>Y</b><input id="p-y" type="number" min="0" max="3071" step="1">
+      <button class="tool" type="button" id="p-pick" title="Puis cliquer sur la carte à la nouvelle place">Déplacer…</button>
+    </div>
+    <p class="hint" id="p-pick-hint" hidden>Clique sur la carte à la nouvelle place (Échap : annuler).<br>Tu peux aussi glisser le point du PNJ.</p>
+    <label for="p-map">Carte</label>
+    <select id="p-map"></select>
     <div class="meta" id="p-meta"></div>
     <div class="row">
       <button class="tool" type="button" id="p-done">Terminé</button>
@@ -279,7 +316,7 @@
 <aside id="g-pnj" class="frame">
   <button class="side-head" id="pnj-head" aria-expanded="true" aria-controls="pnj-body">PNJ <span class="n" id="n-pnj"></span></button>
   <div id="pnj-body">
-    <input class="search" id="pnj-search" type="search" placeholder="Chercher un PNJ…" aria-label="Chercher un PNJ">
+    <input class="search" id="pnj-search" type="search" placeholder="Chercher un PNJ, une île, une carte…" aria-label="Chercher un PNJ">
     <ul id="pnj" class="list pnj"></ul>
   </div>
 </aside>
@@ -342,7 +379,7 @@ function show(id, view) {
     btn.setAttribute('aria-current', btn.dataset.id === m.id));
   document.getElementById('c-world').textContent = m.name;
   document.title = m.name + ' — Explorateur de cartes';
-  renderAll();
+  renderAll(); overzoom();
   saveHash();
 }
 
@@ -410,7 +447,8 @@ if (CFG.grab && CFG.grab.anim) {
 // zones-data.js -> window.ZONES = [{id, map, name, type, color, desc, points: [[x, y], ...]}]
 //   (points = coins de case du jeu, independants de l'echelle du rendu)
 //   type "Île" = ile : contour leger, listee sous sa carte ; les zones et PNJ dedans lui appartiennent
-// pnj-data.js   -> window.PNJ   = [{id, map, x, y, name, role, desc, color?}]   (x, y = case du jeu)
+// pnj-data.js   -> window.PNJ   = [{id, map, x, y, name, role, desc, color?, move?}]   (x, y = case du jeu)
+//   move = cote du carre de deplacement en cases (15 = 15x15 centre sur x, y) ; absent = PNJ fixe
 // Edition : ouvrir index.html?edit (brouillon dans le navigateur, puis Exporter)
 const EDIT = new URLSearchParams(location.search).has('edit');
 const clone = a => JSON.parse(JSON.stringify(a || []));
@@ -426,7 +464,7 @@ let [pnjs, draftP] = loadDraft('t4c-pnj-draft', window.PNJ);
 
 map.createPane('isles').style.zIndex = 390;   // sous les zones : un clic dans une ville choisit la ville
 const zoneLayer = L.layerGroup().addTo(map), pnjLayer = L.layerGroup().addTo(map),
-      handleLayer = L.layerGroup().addTo(map);
+      handleLayer = L.layerGroup().addTo(map), rangeLayer = L.layerGroup().addTo(map);
 const shapes = new Map(), pins = new Map(), isleLabels = new Map();   // id -> polygone / marqueur / nom d'ile
 let selected = null, selP = null, hovered = null, draw = null, placing = false;
 
@@ -495,12 +533,15 @@ function renderZones() {
     const poly = L.polygon(z.points.map(p => corner(cur, p[0], p[1])), Object.assign({ pane: isle ? 'isles' : 'overlayPane' }, styleOf(z)));
     const lab = document.createElement('span'); lab.textContent = z.name || '';
     const hover = on => { hovered = on ? z : null; restyle(); };
-    const click = e => { L.DomEvent.stopPropagation(e); select(z); copyAt(e.latlng); };
+    const click = e => {   // en dessin / pose de PNJ, le clic passe a la carte
+      if (draw || placing) return;
+      L.DomEvent.stopPropagation(e); select(z); copyAt(e.latlng);
+    };
     if (isle) {   // nom au-dessus du contour, centre
       const b = poly.getBounds();
       lab.style.setProperty('--c', z.color || '#e8dcc0');
       const m = L.marker([b.getNorth(), b.getCenter().lng], { icon: L.divIcon({ className: 'isle-label', iconSize: null, html: lab }),
-                                                               keyboard: false, zIndexOffset: -1000 });
+                                                               keyboard: false, zIndexOffset: -1000, bubblingMouseEvents: true });
       m.on('mouseover', () => hover(true)); m.on('mouseout', () => hover(false)); m.on('click', click);
       m.addTo(zoneLayer);
       isleLabels.set(z.id, m);
@@ -530,6 +571,8 @@ function updateLabels() {
   }
 }
 map.on('zoomend', updateLabels);
+const overzoom = () => cur && map.getContainer().classList.toggle('overzoom', map.getZoom() > cur.maxZoom);
+map.on('zoomend', overzoom); map.on('zoomanim', e => map.getContainer().classList.toggle('overzoom', e.zoom > cur.maxZoom));
 
 function listButton(label, small, color, current, onclick) {
   const li = document.createElement('li'), b = document.createElement('button');
@@ -600,10 +643,20 @@ const LABEL_ZOOM = () => cur.maxZoom;   // noms permanents a partir de ce zoom
 let pnjLabelsOn = null;
 
 function pnjIcon(p) {
-  const sz = map.getZoom() >= cur.maxZoom - 2 ? 14 : 10;
-  return L.divIcon({ className: 'pnj-icon' + (selP === p ? ' sel' : ''), iconSize: [sz, sz],
+  const sz = (map.getZoom() >= cur.maxZoom - 2 ? 14 : 10) + (p.move ? 4 : 0);   // un peu plus grand : botte lisible
+  return L.divIcon({ className: 'pnj-icon' + (selP === p ? ' sel' : '') + (p.move ? ' moving' : ''), iconSize: [sz, sz],
                      html: '<span style="--c:' + pnjColor(p) + '"></span>' });
 }
+// Carre de deplacement (move x move cases autour du PNJ), affiche au survol et a la selection
+const MOVE_DEFAULT = 15;
+function showRange(p) {
+  rangeLayer.clearLayers();
+  if (!p || !p.move || p.map !== cur.id) return;
+  const h = Math.floor(p.move / 2), c = pnjColor(p);
+  L.rectangle([corner(cur, p.x - h, p.y - h), corner(cur, p.x - h + p.move, p.y - h + p.move)],
+              { color: c, weight: 1.5, dashArray: '6 4', fillColor: c, fillOpacity: .1, interactive: false }).addTo(rangeLayer);
+}
+const moveTxt = p => 'Se déplace : zone ' + p.move + '×' + p.move + ' cases';
 function renderPnj() {
   pnjLayer.clearLayers(); pins.clear();
   if (selP && selP.map !== cur.id) closeInfo();
@@ -615,15 +668,16 @@ function renderPnj() {
     m.bindTooltip(p.name || '(sans nom)', { permanent: pnjLabelsOn, direction: 'top', offset: [0, -6],
                                             className: 'pnj-label' });
     m.on('click', e => { L.DomEvent.stopPropagation(e); selectPnj(p); copyAt(e.latlng); });
+    m.on('mouseover', () => showRange(p));
+    m.on('mouseout', () => showRange(selP));
     if (EDIT) m.on('dragend', () => {
       const g = toGame(cur, m.getLatLng());
-      if (g) { p.x = g.x; p.y = g.y; saveDraft('pnj'); }
-      m.setLatLng(fromGame(cur, p.x, p.y));
-      if (selP === p) F('p-meta').textContent = pnjMeta(p);
+      if (g) movePnj(p, g.x, g.y); else m.setLatLng(fromGame(cur, p.x, p.y));
     });
     m.addTo(pnjLayer);
     pins.set(p.id, m);
   }
+  showRange(selP);
   renderPnjList();
 }
 map.on('zoomend', () => {
@@ -633,17 +687,28 @@ map.on('zoomend', () => {
 });
 function refreshPin(p) { const m = pins.get(p && p.id); if (m) m.setIcon(pnjIcon(p)); }
 
+// Liste globale : tous les PNJ de toutes les cartes ; a droite, leur ile (sinon leur carte)
+const pnjPlace = p => { const i = pnjIsle(p); return i ? i.name || 'Île' : (byId[p.map] || {}).name || p.map; };
+function goPnj(p) {   // un PNJ d'une autre carte : on change de carte d'abord
+  if (p.map !== cur.id && byId[p.map]) show(p.map, { x: p.x, y: p.y, z: Math.max(map.getZoom(), byId[p.map].maxZoom) });
+  selectPnj(p, true);
+}
 function renderPnjList() {
   const ul = F('pnj'); ul.innerHTML = '';
   const q = F('pnj-search').value.trim().toLowerCase();
-  const mine = pnjs.filter(p => p.map === cur.id);
-  const shown = mine.filter(p => !q || (p.name + ' ' + (p.role || '') + ' ' + (p.desc || '')).toLowerCase().includes(q)).sort(byName);
-  F('g-pnj').hidden = !mine.length && !EDIT;
-  F('n-pnj').textContent = mine.length || '';
-  F('pnj-search').hidden = mine.length < 8;
-  if (!shown.length) ul.innerHTML = '<li class="empty">' + (mine.length ? 'Aucun résultat' : 'Aucun PNJ sur cette carte') + '</li>';
-  for (const p of shown) ul.appendChild(listButton(p.name || '(sans nom)', p.role, pnjColor(p), selP === p,
-                                                   () => selectPnj(p, true)));
+  const items = pnjs.map(p => ({ p, place: pnjPlace(p) }));
+  const shown = items.filter(({ p, place }) => !q || (p.name + ' ' + (p.role || '') + ' ' + (p.desc || '') + ' ' + place).toLowerCase().includes(q))
+                     .sort((a, b) => byName(a.p, b.p));
+  F('g-pnj').hidden = !pnjs.length && !EDIT;
+  F('n-pnj').textContent = pnjs.length || '';
+  F('pnj-search').hidden = pnjs.length < 8;
+  if (!shown.length) ul.innerHTML = '<li class="empty">' + (pnjs.length ? 'Aucun résultat' : 'Aucun PNJ') + '</li>';
+  for (const { p, place } of shown) {
+    const li = listButton(p.name || '(sans nom)', (p.move ? '👢 ' : '') + place, pnjColor(p), selP === p, () => goPnj(p));
+    if (p.map !== cur.id) li.firstChild.classList.add('away');
+    li.firstChild.title = (p.role ? p.role + ' · ' : '') + (byId[p.map] || {}).name + ' · ' + p.x + ', ' + p.y;
+    ul.appendChild(li);
+  }
   const on = ul.querySelector('[aria-current="true"]');
   if (on) on.scrollIntoView({ block: 'nearest' });
 }
@@ -665,7 +730,7 @@ function zoneMeta(z) {
 }
 function pnjMeta(p) {
   const i = pnjIsle(p);
-  return (i ? 'Île : ' + (i.name || '?') + '\n' : '') + 'Position ' + p.x + ', ' + p.y;
+  return (i ? 'Île : ' + (i.name || '?') + '\n' : '') + 'Position ' + p.x + ', ' + p.y + (p.move ? '\n' + moveTxt(p) : '');
 }
 function openCard(form) {   // form = 'info-edit' | 'pnj-edit' | null (lecture)
   info.hidden = false;
@@ -688,7 +753,7 @@ function fillView(type, name, desc, meta) {
   vView.querySelector('.meta').textContent = meta;
 }
 function select(z, fly) {
-  const old = selP; selP = null; refreshPin(old);
+  const old = selP; selP = null; refreshPin(old); rangeLayer.clearLayers();
   selected = z; restyle(); renderZoneList(); renderPnjList();
   openCard(EDIT ? 'info-edit' : null);
   if (EDIT) {
@@ -710,7 +775,11 @@ function selectPnj(p, fly) {
     F('p-name').value = p.name || ''; setOpt(F('p-role'), p.role || 'Habitant');
     F('p-desc').value = p.desc || ''; F('p-meta').textContent = pnjMeta(p);
     F('p-color').value = /^#[0-9a-f]{6}$/i.test(pnjColor(p)) ? pnjColor(p) : '#d4b06a';
+    F('p-x').value = p.x; F('p-y').value = p.y; F('p-map').value = p.map;
+    F('p-move').checked = !!p.move; F('p-move-box').hidden = !p.move;
+    F('p-move-n').value = p.move || MOVE_DEFAULT;
   } else fillView(p.role, p.name, p.desc, pnjMeta(p));
+  showRange(p);
   if (fly) map.setView(fromGame(cur, p.x, p.y), Math.max(map.getZoom(), cur.maxZoom));
 }
 function setOpt(sel, t) {   // ajoute les valeurs libres deja utilisees a la liste
@@ -722,7 +791,8 @@ function setOpt(sel, t) {   // ajoute les valeurs libres deja utilisees a la lis
 }
 function closeInfo() {
   const old = selP;
-  selected = null; selP = null; info.hidden = true; handleLayer.clearLayers();
+  if (placing && placing !== true) stopPlacing();
+  selected = null; selP = null; info.hidden = true; handleLayer.clearLayers(); rangeLayer.clearLayers();
   restyle(); refreshPin(old); renderZoneList(); renderPnjList();
 }
 info.querySelector('.close').onclick = closeInfo;
@@ -808,22 +878,54 @@ function finishDraw() {
 }
 
 // Placement d'un PNJ : le prochain clic sur la carte le pose
-function startPlacing() {
+// (placing = true : nouveau PNJ ; placing = un PNJ : le deplacer)
+function startPlacing(target) {
   if (draw) endDraw();
-  closeInfo(); placing = true;
+  if (!target) closeInfo();
+  placing = target || true;
   map.getContainer().classList.add('drawing');
-  editStatus('Clique sur la carte pour poser le PNJ · Échap : annuler');
+  F('p-pick').classList.toggle('on', !!target);
+  F('p-pick').textContent = target ? 'Annuler' : 'Déplacer…';
+  F('p-pick-hint').hidden = !target;
+  // apercu du PNJ sous la souris (+ trait depuis sa place actuelle)
+  const look = target === true || !target ? { color: '#e8dcc0' } : target;
+  ghost = { mark: L.marker([0, 0], { icon: L.divIcon({ className: 'pnj-icon ghost', iconSize: [14, 14],
+                                                        html: '<span style="--c:' + pnjColor(look) + '"></span>' }),
+                                     interactive: false, keyboard: false }),
+            line: target && target !== true ? L.polyline([], { color: '#fff', weight: 1.5, dashArray: '4 4', interactive: false }) : null };
+  editStatus(target ? 'Clique sur la carte pour déplacer « ' + (target.name || 'PNJ') + ' » · Échap : annuler'
+                    : 'Clique sur la carte pour poser le PNJ · Échap : annuler');
 }
 function stopPlacing() {
   if (!placing) return;
   placing = false; map.getContainer().classList.remove('drawing'); editStatus();
+  F('p-pick').classList.remove('on'); F('p-pick').textContent = 'Déplacer…'; F('p-pick-hint').hidden = true;
+  if (ghost) { ghost.mark.remove(); if (ghost.line) ghost.line.remove(); ghost = null; }
+}
+let ghost = null;
+map.on('mousemove', e => {
+  if (!placing || !ghost) return;
+  const g = toGame(cur, e.latlng);
+  if (!g) return;
+  const ll = fromGame(cur, g.x, g.y);
+  ghost.mark.setLatLng(ll).addTo(map);
+  if (ghost.line && placing !== true) ghost.line.setLatLngs([fromGame(cur, placing.x, placing.y), ll]).addTo(map);
+});
+// Nouvelle position d'un PNJ (champs X/Y, clic sur la carte, glisser)
+function movePnj(p, x, y) {
+  p.x = Math.max(0, Math.min(3071, x | 0)); p.y = Math.max(0, Math.min(3071, y | 0));
+  saveDraft('pnj');
+  const m = pins.get(p.id);
+  if (m) m.setLatLng(fromGame(cur, p.x, p.y));
+  if (selP === p) { F('p-x').value = p.x; F('p-y').value = p.y; F('p-meta').textContent = pnjMeta(p); showRange(p); }
 }
 
 map.on('click', e => {
   if (placing) {
-    const g = toGame(cur, e.latlng);
+    const g = toGame(cur, e.latlng), target = placing;
     stopPlacing();
     if (!g) return;
+    if (target !== true) { movePnj(target, g.x, g.y); return; }
     const p = { id: 'p' + Date.now().toString(36), map: cur.id, x: g.x, y: g.y,
                 name: 'Nouveau PNJ', role: 'Habitant', desc: '' };
     pnjs.push(p); saveDraft('pnj'); renderPnj(); selectPnj(p);
@@ -907,6 +1009,33 @@ if (EDIT) {
       if (key === 'color') { refreshPin(selP); renderPnjList(); }
     });
   }
+  // Deplacement : case a cocher + taille du carre (15x15 par defaut)
+  const moveChanged = () => {
+    if (!selP) return;
+    const n = Math.max(1, Math.min(199, Math.round(+F('p-move-n').value) || MOVE_DEFAULT));
+    if (F('p-move').checked) selP.move = n; else delete selP.move;
+    F('p-move-box').hidden = !selP.move;
+    saveDraft('pnj'); refreshPin(selP); showRange(selP); renderPnjList();
+    F('p-meta').textContent = pnjMeta(selP);
+  };
+  F('p-move').addEventListener('change', moveChanged);
+  F('p-move-n').addEventListener('input', moveChanged);
+  // Position : X / Y, clic sur la carte, carte (monde)
+  for (const id of ['p-x', 'p-y']) F(id).addEventListener('input', () => {
+    if (!selP || F(id).value === '') return;
+    movePnj(selP, +F('p-x').value, +F('p-y').value);
+    const m = pins.get(selP.id);
+    if (m && !map.getBounds().contains(m.getLatLng())) map.panTo(m.getLatLng());
+  });
+  F('p-pick').onclick = () => { if (!selP) return; if (placing === selP) stopPlacing(); else startPlacing(selP); };
+  for (const m of CFG.maps) { const o = document.createElement('option'); o.value = m.id; o.textContent = m.name; F('p-map').appendChild(o); }
+  F('p-map').addEventListener('change', () => {
+    if (!selP) return;
+    const p = selP;
+    p.map = F('p-map').value; saveDraft('pnj');
+    show(p.map, { x: p.x, y: p.y, z: map.getZoom() });
+    selectPnj(p);
+  });
   F('p-done').onclick = closeInfo;
   F('p-del').onclick = () => {
     if (!selP || !confirm('Supprimer « ' + (selP.name || 'PNJ') + ' » ?')) return;
@@ -915,7 +1044,7 @@ if (EDIT) {
   // Outils
   F('t-new').onclick = () => startDraw(false);
   F('t-new-isle').onclick = () => startDraw(true);
-  F('t-new-pnj').onclick = startPlacing;
+  F('t-new-pnj').onclick = () => startPlacing();
   F('t-export').onclick = () => download('zones-data.js', 'ZONES', zones);
   F('t-export-pnj').onclick = () => download('pnj-data.js', 'PNJ', pnjs);
   F('t-import').onclick = () => F('t-file').click();
