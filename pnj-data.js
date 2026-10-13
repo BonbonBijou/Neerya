@@ -14,7 +14,7 @@ window.PNJ = [
   "id": "pa001",
   "map": "world0",
   "x": 2705,
-  "y": 1301,
+  "y": 1303,
   "name": "Académicien archiviste",
   "role": "",
   "desc": "A tuer lors des invasions de repaire",
@@ -1033,8 +1033,8 @@ window.PNJ = [
  {
   "id": "pa103",
   "map": "world0",
-  "x": 2705,
-  "y": 1301,
+  "x": 2711,
+  "y": 1401,
   "name": "Rodeur nocturne",
   "role": "",
   "desc": "Les rôdeurs doivent tous être tués lors des invasions de repaire",
@@ -1093,8 +1093,8 @@ window.PNJ = [
  {
   "id": "pa109",
   "map": "world0",
-  "x": 2705,
-  "y": 1301,
+  "x": 2716,
+  "y": 1407,
   "name": "Sagittaire",
   "role": "",
   "desc": "Les sagittaires doivent toutes être tuées lors des invasions de repaire",
@@ -1793,8 +1793,8 @@ window.PNJ = [
  {
   "id": "pgr179",
   "map": "world6",
-  "x": 2635,
-  "y": 1882,
+  "x": 158,
+  "y": 1444,
   "name": "Acha Windchaser",
   "role": "",
   "desc": "5ème et dernière quête des objets magiques de la tour de la Main Gantée",
@@ -1964,8 +1964,8 @@ window.PNJ = [
  {
   "id": "pgr196",
   "map": "world6",
-  "x": 2627,
-  "y": 1896,
+  "x": 147,
+  "y": 1457,
   "name": "Earpwald Blindlock",
   "role": "",
   "desc": "4ème quête des objets magiques de la tour de la Main Gantée",
@@ -2030,7 +2030,7 @@ window.PNJ = [
   "y": 572,
   "name": "Fitz Oeil-de nuit",
   "role": "",
-  "desc": "Apprend _Piller",
+  "desc": "Apprend la compétence Piller",
   "color": "#dad581"
  },
  {
@@ -4202,5 +4202,34 @@ window.PNJ = [
   "role": "Quête",
   "desc": "Quête des Veuves",
   "move": 29
+ },
+ {
+  "id": "pmv614pi9",
+  "map": "world0",
+  "x": 2732,
+  "y": 1397,
+  "name": "Antiquaire-joallier",
+  "role": "Marchand",
+  "desc": "Ajouts pour l'anneau de lien"
+ },
+ {
+  "id": "pmv61hhqm",
+  "map": "world0",
+  "x": 2706,
+  "y": 1356,
+  "name": "Antiquaire-marchand",
+  "role": "Habitant",
+  "desc": "Échanger des bons contre des récompenses de base",
+  "color": "#b077c0"
+ },
+ {
+  "id": "pmv61izww",
+  "map": "world0",
+  "x": 2777,
+  "y": 1314,
+  "name": "Préposé aux tâches",
+  "role": "Quête",
+  "desc": "Quêtes journalières pour obtenir des bons",
+  "color": "#7a7fc7"
  }
 ];
