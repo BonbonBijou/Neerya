@@ -1,0 +1,10 @@
+# Genere par make_atlas.py (pas ecrase s'il existe deja)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|json)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "\.(avif|webp|png|gif)$">
+    Header set Cache-Control "public, max-age=31536000"
+  </FilesMatch>
+</IfModule>
+AddType image/avif .avif
