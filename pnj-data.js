@@ -4231,5 +4231,15 @@ window.PNJ = [
   "role": "Quête",
   "desc": "Quêtes journalières pour obtenir des bons",
   "color": "#7a7fc7"
+ },
+ {
+  "id": "pmv65bf8v",
+  "map": "world0",
+  "x": 1187,
+  "y": 2749,
+  "name": "Jean Pinpon",
+  "role": "Quête",
+  "desc": "Quête journalière",
+  "color": "#df3434"
  }
 ];
