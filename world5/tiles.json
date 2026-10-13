@@ -1,7 +1,7 @@
 {
-  "width": 12288,
-  "height": 6144,
+  "width": 24576,
+  "height": 12288,
   "tile": 256,
-  "maxZoom": 6,
+  "maxZoom": 7,
   "ext": "webp"
 }

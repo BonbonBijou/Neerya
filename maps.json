@@ -3,88 +3,88 @@
     "id": "world0",
     "file": "v2_worldmap",
     "name": "Monde principal",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world1",
     "file": "v2_dungeonmap",
     "name": "Donjons",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world2",
     "file": "v2_cavernmap",
     "name": "Cavernes",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world3",
     "file": "v2_underworld",
     "name": "Underworld",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world4",
     "file": "v2_leoworld",
     "name": "Leoworld",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world5",
     "file": "v2_extension01",
     "name": "Extension 1",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world6",
     "file": "v2_extension02",
     "name": "Extension 2",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   },
   {
     "id": "world7",
     "file": "v2_extension03",
     "name": "Extension 3",
-    "width": 12288,
-    "height": 6144,
+    "width": 24576,
+    "height": 12288,
     "tile": 256,
-    "maxZoom": 6,
+    "maxZoom": 7,
     "ext": "webp",
-    "scale": 0.125
+    "scale": 0.25
   }
 ]
