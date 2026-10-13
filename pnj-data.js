@@ -4237,7 +4237,7 @@ window.PNJ = [
   "map": "world0",
   "x": 1187,
   "y": 2749,
-  "name": "Jean Pinpon",
+  "name": "Jean Pimpon",
   "role": "Quête",
   "desc": "Quête journalière",
   "color": "#df3434"
