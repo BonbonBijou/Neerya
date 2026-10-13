@@ -1,7 +1,41 @@
 {
   "width": 24576,
   "height": 12288,
-  "tile": 256,
+  "tile": 512,
   "maxZoom": 7,
-  "ext": "webp"
+  "ext": "avif",
+  "have": {
+    "7": [
+      48,
+      "////fz4Q//////94//////85//////84////fz4w////fxy4////f38MAACA/38eAAAA/j8PAAAA/j8OAMAD+D8AeIAD+z8P+XCBjz8P+/CBjz8C+OCBhz8AePgBgD8AeDDhAQAAB4DhAWAA7gAAAGAA/gEAAAAA7ADAAwAA/sHDAwAATuADDwAAAEAADwAA"
+    ],
+    "6": [
+      24,
+      "///v//9////n//9/APA3jvE3z7k37rkHzx0MHwAMnxkAyzEA"
+    ],
+    "5": [
+      12,
+      "////2/d/f/IH"
+    ],
+    "4": [
+      6,
+      "//8B"
+    ],
+    "3": [
+      3,
+      "Pw=="
+    ],
+    "2": [
+      2,
+      "Aw=="
+    ],
+    "1": [
+      1,
+      "AQ=="
+    ],
+    "0": [
+      1,
+      "AQ=="
+    ]
+  }
 }
