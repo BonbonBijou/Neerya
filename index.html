@@ -1551,7 +1551,7 @@ const ROUTE_WORKER = `
 // Puis A* (8 directions, comme le jeu).
 const SATP = .32, PLANK = 7.3, RELIEF = 31, MOUNTAIN = 37.5, EDGE = 3, SHADOW = .16, WATER = .5, GREEN = .25, CANOPY = 5;
 const ROCK = .06, ROCK_CORE = .15, ROCK_GROW = 10, TIP = 4;
-const MIN_HOLE = 12, SOFT_COST = 40, SNAP = 8, MAX_BOX = 1600;
+const MIN_HOLE = 12, SOFT_COST = 40, SNAP = 8, SNAP_ME = 20, MAX_BOX = 1600;
 let cfg = null, have = null;
 const cache = new Map();   // 'monde/tx/ty' -> mesures par case de la tuile
 self.loadTileRGBA = self.loadTileRGBA || (async (tx, ty) => {
@@ -1799,8 +1799,8 @@ function astar(hard, soft, bw, bh, s, d, edges) {   // -> {path} ou {touched} (l
   }
   return { touched };
 }
-function snap(hard, bw, bh, x, y) {   // case marchable la plus proche (rayon SNAP)
-  for (let r = 0; r <= SNAP; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+function snap(hard, bw, bh, x, y, R = SNAP) {   // case marchable la plus proche (rayon R)
+  for (let r = 0; r <= R; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
     if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
     const X = x + dx, Y = y + dy;
     if (X >= 0 && Y >= 0 && X < bw && Y < bh && !hard[Y * bw + X]) return Y * bw + X;
@@ -1824,26 +1824,27 @@ function enclosed(hard, bw, bh, s, edges) {   // la region de s ne touche aucun 
   }
   return true;
 }
-async function localCheck(x, y, ox, oy, id) {   // 'blocked' (dans l'eau...), 'far' (ile sans l'autre bout) ou null
+async function localCheck(x, y, ox, oy, id, R0 = SNAP) {   // 'blocked' (dans l'eau...), 'far' (ile sans l'autre bout) ou null
   const C = cfg.cells, R = 160;
   {   // d'abord tout pres : la case est-elle marchable ?
-    const r = SNAP + 2, bx0 = Math.max(0, x - r), by0 = Math.max(0, y - r);
+    const r = R0 + 2, bx0 = Math.max(0, x - r), by0 = Math.max(0, y - r);
     const bw = Math.min(C, x + r + 1) - bx0, bh = Math.min(C, y + r + 1) - by0, { hard } = await analyse(bx0, by0, bw, bh, id);
-    if (snap(hard, bw, bh, x - bx0, y - by0) < 0) return 'blocked';
+    if (snap(hard, bw, bh, x - bx0, y - by0, R0) < 0) return 'blocked';
   }
   const bx0 = Math.max(0, x - R), by0 = Math.max(0, y - R), bx1 = Math.min(C, x + R + 1), by1 = Math.min(C, y + R + 1);
   if (ox >= bx0 && ox < bx1 && oy >= by0 && oy < by1) return null;
   const bw = bx1 - bx0, bh = by1 - by0, { hard } = await analyse(bx0, by0, bw, bh, id);
-  const s = snap(hard, bw, bh, x - bx0, y - by0);
+  const s = snap(hard, bw, bh, x - bx0, y - by0, R0);
   return s >= 0 && enclosed(hard, bw, bh, s, { l: bx0 > 0, t: by0 > 0, r: bx1 < C, b: by1 < C }) ? 'far' : null;
 }
 async function route(m) {
   const C = cfg.cells, dist = Math.max(Math.abs(m.dx - m.sx), Math.abs(m.dy - m.sy));
+  if (dist > MAX_BOX - 100) return { status: 'toofar' };   // trop grand pour la memoire : se rapprocher d'abord
   // loin : d'abord un coup d'oeil autour de chaque bout (une ile se voit tout de suite)
   if (dist > 250) {
     const d = await localCheck(m.dx, m.dy, m.sx, m.sy, m.id);
     if (d) return d === 'far' ? { status: 'far' } : { status: 'blocked', which: 'dest' };
-    const s = await localCheck(m.sx, m.sy, m.dx, m.dy, m.id);
+    const s = await localCheck(m.sx, m.sy, m.dx, m.dy, m.id, SNAP_ME);   // le joueur est forcement sur une case marchable
     if (s) return s === 'far' ? { status: 'far' } : { status: 'blocked', which: 'start' };
   }
   let margin = Math.max(60, Math.round(dist * .35)), prev = '';
@@ -1856,7 +1857,7 @@ async function route(m) {
     if (box === prev) return { status: 'unknown' };   // la boite ne peut plus grandir (bord du monde, taille max)
     prev = box;
     const { hard, soft } = await analyse(bx0, by0, bw, bh, m.id);
-    const s = snap(hard, bw, bh, m.sx - bx0, m.sy - by0), d = snap(hard, bw, bh, m.dx - bx0, m.dy - by0);
+    const s = snap(hard, bw, bh, m.sx - bx0, m.sy - by0, SNAP_ME), d = snap(hard, bw, bh, m.dx - bx0, m.dy - by0);
     if (s < 0 || d < 0) return { status: 'blocked', which: s < 0 ? 'start' : 'dest' };
     const edges = { l: bx0 > 0, t: by0 > 0, r: bx1 < C, b: by1 < C };
     const r = astar(hard, soft, bw, bh, s, d, edges);
@@ -1967,7 +1968,7 @@ function routeUpdate(force) {   // appele quand la position ou la destination ch
 function routeDone(e) {
   const r = e.data;
   if (r.type === 'progress') {   // 1er calcul : on montre l'avancement de l'analyse
-    if (rFirst && r.id === rSeq && r.total > 4) destLabel('Analyse de la carte… ' + Math.round(r.done / r.total * 100) + ' %');
+    if (rFirst && r.id === rSeq && destText !== 'Calcul du trajet…') destLabel('Calcul du trajet…');
     return;
   }
   rBusy = false;
@@ -1984,6 +1985,7 @@ function routeDone(e) {
     } else if (r.status === 'blocked') {
       destText = r.which === 'dest' ? 'Destination dans l’eau ou la montagne' : 'Ta position : terrain non reconnu';
     } else if (r.status === 'unknown') destText = 'Pas de trajet trouvé dans les environs';
+    else if (r.status === 'toofar') destText = 'Trop loin : rapproche-toi pour voir le trajet';
     else {
       console.error('trajet :', r.error);
       // page ouverte depuis le disque : le navigateur interdit de lire les pixels des tuiles
