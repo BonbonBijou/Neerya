@@ -1542,9 +1542,11 @@ map.on('zoomend', () => { if (meOn && meFollow && meMark) map.panTo(meMark.getLa
 const ROUTE_WORKER = `
 // Trajet a pied, calcule dans le navigateur a partir des tuiles de la carte (zoom natif).
 // On regarde l'image case par case : eau (bleu-vert), vide, montagnes (beaucoup de relief
-// sur une large zone) = bloque ; murs, arbres, rochers = a eviter (le trajet les contourne
-// mais peut y passer). Puis A* (8 directions, comme le jeu).
-const RELIEF = 31, MOUNTAIN = 37.5, EDGE = 3, SHADOW = .16, WATER = .5, GREEN = .25, CANOPY = 5;
+// sur une large zone, roche brune) = bloque ; murs, arbres, rochers = a eviter (le trajet les
+// contourne mais peut y passer). Le pavage gris des villes a aussi beaucoup de relief : il reste
+// marchable (peu sature), et il n'y a jamais de montagne dans une zone "Ville" (zones-data.js).
+// Puis A* (8 directions, comme le jeu).
+const SATP = .32, RELIEF = 31, MOUNTAIN = 37.5, EDGE = 3, SHADOW = .16, WATER = .5, GREEN = .25, CANOPY = 5;
 const MIN_HOLE = 12, SOFT_COST = 8, SNAP = 8, MAX_BOX = 1600;
 let cfg = null, have = null;
 const cache = new Map();   // 'monde/tx/ty' -> mesures par case de la tuile
@@ -1564,7 +1566,7 @@ function hasTile(tx, ty) {
 function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
   const CW = cfg.cw, CH = cfg.ch, nx = cfg.tcx, ny = cfg.tcy, n = nx * ny;
   const f = { water: new Float32Array(n), voidc: new Float32Array(n), grad: new Float32Array(n),
-              dark: new Float32Array(n), green: new Float32Array(n) };
+              dark: new Float32Array(n), green: new Float32Array(n), sat: new Float32Array(n) };
   const lum = new Float32Array(W * H);
   for (let i = 0, j = 0; i < W * H; i++, j += 4) lum[i] = (px[j] * 299 + px[j + 1] * 587 + px[j + 2] * 114) / 1000;
   for (let y = 0; y < H; y++) {
@@ -1578,6 +1580,8 @@ function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
       if (Math.abs(r - 32) < 3 && Math.abs(g - 32) < 3 && Math.abs(b - 32) < 3) f.voidc[c]++;
       if (l < 35) f.dark[c]++;
       if (g > r + 8 && g > b + 8) f.green[c]++;
+      const mx = r > g ? (r > b ? r : b) : (g > b ? g : b), mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+      f.sat[c] += (mx - mn) / (mx + 1);
       f.grad[c] += (x < W - 1 ? Math.abs(lum[i + 1] - l) : 0) + (y < H - 1 ? Math.abs(lum[i + W] - l) : 0);
     }
   }
@@ -1587,7 +1591,7 @@ function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
 }
 function emptyTile() {
   const n = cfg.tcx * cfg.tcy, f = { water: new Float32Array(n), voidc: new Float32Array(n).fill(1),
-    grad: new Float32Array(n), dark: new Float32Array(n), green: new Float32Array(n) };
+    grad: new Float32Array(n), dark: new Float32Array(n), green: new Float32Array(n), sat: new Float32Array(n) };
   return f;
 }
 async function tileFeat(tx, ty) {
@@ -1620,7 +1624,7 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
   const tx0 = Math.floor(bx0 / cfg.tcx), tx1 = Math.floor((bx0 + bw - 1) / cfg.tcx);
   const ty0 = Math.floor(by0 / cfg.tcy), ty1 = Math.floor((by0 + bh - 1) / cfg.tcy);
   const n = bw * bh, water = new Float32Array(n), voidc = new Float32Array(n), grad = new Float32Array(n),
-        dark = new Float32Array(n), green = new Float32Array(n);
+        dark = new Float32Array(n), green = new Float32Array(n), sat = new Float32Array(n);
   const total = (tx1 - tx0 + 1) * (ty1 - ty0 + 1);
   let done = 0;
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
@@ -1634,13 +1638,15 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
         if (x < 0 || x >= bw) continue;
         const s = cy * cfg.tcx + cx, d = y * bw + x;
         water[d] = f.water[s]; voidc[d] = f.voidc[s]; grad[d] = f.grad[s]; dark[d] = f.dark[s]; green[d] = f.green[s];
+        sat[d] = f.sat[s];
       }
     }
     if (++done % 4 === 0 || done === total) postMessage({ type: 'progress', id, done, total });
   }
   const rel5 = boxMean(grad, bw, bh, 5), rel13 = boxMean(grad, bw, bh, 13);
-  const core = new Float32Array(n);
-  for (let i = 0; i < n; i++) core[i] = rel13[i] > MOUNTAIN ? 1 : 0;
+  const sat5 = boxMean(sat, bw, bh, 5), sat13 = boxMean(sat, bw, bh, 13), town = townMask(bx0, by0, bw, bh);
+  const core = new Float32Array(n);   // massif de montagne : relief fort, roche brune, hors ville
+  for (let i = 0; i < n; i++) core[i] = rel13[i] > MOUNTAIN && sat13[i] > SATP && !town[i] ? 1 : 0;
   const near = boxMean(core, bw, bh, 2 * EDGE + 1);
   const can = boxMean(green, bw, bh, 3), sh = boxMean(dark, bw, bh, 3);
   // eau ; une riviere cachee sous des feuilles : l'eau s'etend sous le feuillage vert
@@ -1655,7 +1661,7 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
   for (let i = 0; i < n; i++) {
     const relief = rel5[i] > RELIEF;
     hard[i] = wet[i] || voidc[i] > .5 || (relief && near[i] > 0) ? 1 : 0;
-    soft[i] = !hard[i] && (relief || sh[i] > SHADOW) ? 1 : 0;
+    soft[i] = !hard[i] && ((relief && sat5[i] > SATP) || sh[i] > SHADOW) ? 1 : 0;   // pavage gris : marchable
   }
   // petits trous marchables au milieu de l'eau / la montagne : bloques (sauf au bord de la boite)
   const lab = new Int32Array(n), st = new Int32Array(n);
@@ -1678,6 +1684,26 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
     if (cnt < MIN_HOLE && !border) for (const p of cells) { hard[p] = 1; soft[p] = 0; }
   }
   return { hard, soft };
+}
+function townMask(bx0, by0, bw, bh) {   // cases dans une zone "Ville" (points = coins de case)
+  const m = new Uint8Array(bw * bh);
+  for (const P of cfg.towns || []) {
+    let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+    for (const [x, y] of P) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const ax = Math.max(bx0, Math.floor(x0)), bxe = Math.min(bx0 + bw, Math.ceil(x1));
+    const ay = Math.max(by0, Math.floor(y0)), bye = Math.min(by0 + bh, Math.ceil(y1));
+    for (let y = ay; y < bye; y++) {
+      const cy = y + .5, xs = [];   // intersections de la ligne avec les bords du polygone
+      for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+        const [xi, yi] = P[i], [xj, yj] = P[j];
+        if ((yi > cy) !== (yj > cy)) xs.push(xi + (cy - yi) * (xj - xi) / (yj - yi));
+      }
+      xs.sort((a, b) => a - b);
+      for (let k = 0; k + 1 < xs.length; k += 2)
+        for (let x = Math.max(ax, Math.ceil(xs[k] - .5)); x < bxe && x + .5 < xs[k + 1]; x++) m[(y - by0) * bw + x - bx0] = 1;
+    }
+  }
+  return m;
 }
 function simplify(pts, eps) {   // Douglas-Peucker
   const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
@@ -1884,7 +1910,8 @@ function routeConfig(w) {   // le worker analyse les tuiles du monde w
   if (rLoaded === w) return;
   const m = byId['world' + w], z = m.maxZoom, cw = Math.round(32 * m.scale), ch = Math.round(16 * m.scale);
   rWorker.postMessage({ type: 'config', cfg: { id: m.id, base: new URL('.', location.href).href, z, ext: m.ext, v: m.v,
-    have: m.have ? m.have[z] : null, cw, ch, tcx: m.tile / cw, tcy: m.tile / ch, cells: Math.round(m.width / cw) } });
+    have: m.have ? m.have[z] : null, cw, ch, tcx: m.tile / cw, tcy: m.tile / ch, cells: Math.round(m.width / cw),
+    towns: zones.filter(t => t.map === m.id && t.type === 'Ville' && t.points).map(t => t.points) } });   // pas de montagne en ville
   rLoaded = w;
 }
 function routeUpdate(force) {   // appele quand la position ou la destination change
