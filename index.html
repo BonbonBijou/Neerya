@@ -64,26 +64,40 @@
                   box-shadow: 0 0 0 3px #1a1408, 0 0 0 5px #ffd75a; }
   .me-icon::before { content: ''; position: absolute; inset: -14px; border-radius: 50%;
                      border: 2px solid #ffd75a; animation: me-pulse 1.6s ease-out infinite; }
-  #me-dlg { width: min(380px, calc(100vw - 24px)); padding: 0; color: var(--text); background: var(--panel-solid); }
-  #me-dlg::backdrop { background: rgba(0,0,0,.5); }
-  #me-dlg header { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--edge); }
-  #me-dlg h2 { flex: 1; margin: 0; font: 700 16px/1.2 var(--title); letter-spacing: .05em; color: var(--edge-hi); }
-  #me-dlg .x { width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
-  #me-dlg .x:hover { color: #fff; }
-  #me-dlg form { padding: 12px 14px 14px; }
-  #me-dlg p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; }
-  #me-dlg .row { display: flex; gap: 8px; }
-  #me-dlg input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 4px;
+  #me-dlg, #dest-dlg { width: min(380px, calc(100vw - 24px)); padding: 0; color: var(--text); background: var(--panel-solid); }
+  #me-dlg::backdrop, #dest-dlg::backdrop { background: rgba(0,0,0,.5); }
+  #me-dlg header, #dest-dlg header { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--edge); }
+  #me-dlg h2, #dest-dlg h2 { flex: 1; margin: 0; font: 700 16px/1.2 var(--title); letter-spacing: .05em; color: var(--edge-hi); }
+  #me-dlg .x, #dest-dlg .x { width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
+  #me-dlg .x:hover, #dest-dlg .x:hover { color: #fff; }
+  #me-dlg form, #dest-dlg form { padding: 12px 14px 14px; }
+  #me-dlg p, #dest-dlg p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; }
+  #me-dlg .row, #dest-dlg .row { display: flex; gap: 8px; }
+  #me-dlg input, #dest-dlg input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 4px;
                   background: rgba(0,0,0,.35); color: var(--text); font: 15px/1.2 ui-monospace, Consolas, monospace; }
-  #me-dlg input:focus { outline: 2px solid var(--edge-hi); outline-offset: 0; }
-  #me-dlg button[type=submit] { padding: 8px 14px; border: 1px solid var(--edge); border-radius: 4px;
+  #me-dlg input:focus, #dest-dlg input:focus { outline: 2px solid var(--edge-hi); outline-offset: 0; }
+  #me-dlg button[type=submit], #dest-dlg button[type=submit] { padding: 8px 14px; border: 1px solid var(--edge); border-radius: 4px;
                   background: rgba(47,183,156,.16); color: var(--text); font-weight: 600; }
-  #me-dlg button[type=submit]:hover { background: rgba(47,183,156,.3); }
-  #me-dlg .err { color: #ff8a7a; min-height: 1.2em; margin: 6px 0 0; font-size: 13px; }
-  #me-dlg .share { width: 100%; margin: 0 0 14px; padding: 9px 12px; border: 1px solid var(--gem); border-radius: 4px;
+  #me-dlg button[type=submit]:hover, #dest-dlg button[type=submit]:hover { background: rgba(47,183,156,.3); }
+  #me-dlg .err, #dest-dlg .err { color: #ff8a7a; min-height: 1.2em; margin: 6px 0 0; font-size: 13px; }
+  #me-dlg .share, #dest-dlg .share { width: 100%; margin: 0 0 14px; padding: 9px 12px; border: 1px solid var(--gem); border-radius: 4px;
                    background: rgba(47,183,156,.22); color: #fff; font-weight: 600; }
-  #me-dlg .share:hover { background: rgba(47,183,156,.38); }
-  #me-dlg .share:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+  #me-dlg .share:hover, #dest-dlg .share:hover { background: rgba(47,183,156,.38); }
+  #me-dlg .share:focus-visible, #dest-dlg .share:focus-visible, #dest-dlg .clear:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+  /* Destination : drapeau + trajet a pied */
+  #dest-btn { flex: none; width: 30px; height: 30px; display: grid; place-items: center; padding: 0;
+              border: 1px solid var(--edge); border-radius: 50%; background: none; color: var(--edge-hi); }
+  #dest-btn svg { width: 16px; height: 16px; }
+  #dest-btn:hover { background: rgba(212,176,106,.16); color: #fff; }
+  #dest-btn[aria-pressed="true"] { background: #e8463c; border-color: #ff8a7a; color: #fff; }
+  #dest-btn:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+  #dest-dlg .note { margin: 10px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+  #dest-dlg .clear { margin: 4px 0 0; padding: 7px 12px; border: 1px solid #a8483f; border-radius: 4px;
+                     background: rgba(232,70,60,.14); color: var(--text); }
+  #dest-dlg .clear:hover { background: rgba(232,70,60,.3); }
+  .dest-icon svg { width: 28px; height: 28px; overflow: visible; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.9)); }
+  .dest-label { font-weight: 600; }
+  body.picking .leaflet-container, body.picking .leaflet-container * { cursor: crosshair !important; }
   @keyframes me-pulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
   #help-btn:focus-visible, #help .x:focus-visible, #help .btn:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
   /* Aide : comment contribuer (zones, PNJ, envoi des fichiers) */
@@ -295,6 +309,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
         <circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/>
         <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg></button>
+    <button id="dest-btn" type="button" aria-pressed="false" aria-haspopup="dialog"
+            title="Destination : place un drapeau, la carte trace le trajet à pied">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 22V3"/><path d="M5 4h12l-3 4 3 4H5" fill="currentColor"/></svg></button>
     <button id="help-btn" type="button" title="Aide : contribuer à la carte" aria-haspopup="dialog">?</button>
     <button id="toggle" aria-expanded="false" aria-controls="maps-nav" title="Menu">&#9776;</button>
   </header>
@@ -413,6 +431,27 @@
       <button type="submit">Y aller</button>
     </div>
     <p class="err" id="me-err" role="alert"></p>
+  </form>
+</dialog>
+
+<dialog id="dest-dlg" class="frame" aria-labelledby="dest-title">
+  <header>
+    <h2 id="dest-title">Destination</h2>
+    <button class="x" type="button" title="Fermer (Échap)" aria-label="Fermer">&times;</button>
+  </header>
+  <form method="dialog">
+    <p>Place un drapeau : la carte trace le trajet à pied depuis ta position (bouton cible),
+       en évitant l'eau, les montagnes et les murs.</p>
+    <button type="button" class="share" id="dest-pick">Choisir sur la carte</button>
+    <p>Ou tape la position, par exemple <b>670,2215,0</b> (X, Y, monde) :</p>
+    <div class="row">
+      <input id="dest-input" inputmode="numeric" autocomplete="off" placeholder="X,Y,monde" aria-label="Destination X,Y,monde">
+      <button type="submit">Placer</button>
+    </div>
+    <p class="err" id="dest-err" role="alert"></p>
+    <button type="button" class="clear" id="dest-clear" hidden>Retirer la destination</button>
+    <p class="note">Astuce : un clic droit sur la carte (appui long au doigt) place aussi le drapeau.
+       Le trajet est deviné en regardant l'image de la carte : il peut se tromper dans les bâtiments.</p>
   </form>
 </dialog>
 
@@ -560,7 +599,15 @@ map.on('mouseout', () => showXY(null));
 // Clic : copie "X Y monde"
 const toast = document.getElementById('toast');
 let toastT;
-map.on('click', e => { if (!draw) copyAt(e.latlng); });   // pas en mode dessin de zone
+map.on('click', e => {
+  if (pickAt(e.latlng)) return;
+  if (!draw) copyAt(e.latlng);   // pas en mode dessin de zone
+});
+function pickAt(latlng) {   // mode "choisir sur la carte" : ce clic place le drapeau (sur une zone, un PNJ...)
+  if (!picking) return false;
+  picking = false; document.body.classList.remove('picking'); destAt(latlng);
+  return true;
+}
 function copyAt(latlng) {
   const g = toGame(cur, latlng);
   if (!g) return;
@@ -688,20 +735,25 @@ function renderZones() {
     const hover = on => { hovered = on ? z : null; restyle(); };
     const click = e => {   // en dessin / pose de PNJ, le clic passe a la carte
       if (draw || placing) return;
-      L.DomEvent.stopPropagation(e); select(z); copyAt(e.latlng);
+      L.DomEvent.stopPropagation(e);
+      if (pickAt(e.latlng)) return;   // "choisir sur la carte" : le drapeau va dans la zone
+      select(z); copyAt(e.latlng);
     };
+    const ctx = e => { L.DomEvent.stopPropagation(e); L.DomEvent.preventDefault(e); destAt(e.latlng); };
     if (isle) {   // nom au-dessus du contour, centre
       const b = poly.getBounds();
       lab.style.setProperty('--c', z.color || '#e8dcc0');
       const m = L.marker([b.getNorth(), b.getCenter().lng], { icon: L.divIcon({ className: 'isle-label', iconSize: null, html: lab }),
                                                                keyboard: false, zIndexOffset: -1000, bubblingMouseEvents: true });
       m.on('mouseover', () => hover(true)); m.on('mouseout', () => hover(false)); m.on('click', click);
+      m.on('contextmenu', ctx);
       m.addTo(zoneLayer);
       isleLabels.set(z.id, m);
     } else poly.bindTooltip(lab, { permanent: true, direction: 'center', className: 'zone-label', interactive: false });
     poly.on('mouseover', () => hover(true));
     poly.on('mouseout', () => hover(false));
     poly.on('click', click);
+    poly.on('contextmenu', ctx);   // clic droit dans une zone : destination
     poly.addTo(zoneLayer);
     shapes.set(z.id, poly);
   }
@@ -820,7 +872,8 @@ function renderPnj() {
                                                   riseOnHover: true });
     m.bindTooltip(p.name || '(sans nom)', { permanent: pnjLabelsOn, direction: 'top', offset: [0, -6],
                                             className: 'pnj-label' });
-    m.on('click', e => { L.DomEvent.stopPropagation(e); selectPnj(p); copyAt(e.latlng); });
+    m.on('click', e => { L.DomEvent.stopPropagation(e); if (pickAt(e.latlng)) return; selectPnj(p); copyAt(e.latlng); });
+    m.on('contextmenu', e => { L.DomEvent.stopPropagation(e); L.DomEvent.preventDefault(e); destAt(e.latlng); });
     m.on('mouseover', () => showRange(p));
     m.on('mouseout', () => showRange(selP));
     if (EDIT) m.on('dragend', () => {
@@ -1361,10 +1414,12 @@ function meStop(msg) {
   if (meVideo) { meVideo.remove(); meVideo = null; }
   if (meMark) { map.removeLayer(meMark); meMark = null; }
   meState(); if (msg) meToast(msg);
+  if (dest) { route = null; destText = 'Destination'; destDraw(); }
 }
 function meDraw() {
   const id = mePos && 'world' + mePos.w;
   if (!mePos || !byId[id]) return;
+  routeUpdate();   // la position a change : trajet vers la destination
   if (meFollow && id !== cur.id) show(id, { x: mePos.x, y: mePos.y, z: Math.max(map.getZoom(), byId[id].maxZoom - 1) });
   if (id !== cur.id) { if (meMark) { map.removeLayer(meMark); meMark = null; } return; }
   const ll = fromGame(cur, mePos.x, mePos.y);
@@ -1481,8 +1536,435 @@ meBtn.onclick = () => {
 };
 map.on('dragstart', () => { if (meOn && meFollow) { meFollow = false; meState(); } });
 map.on('zoomend', () => { if (meOn && meFollow && meMark) map.panTo(meMark.getLatLng(), { animate: false }); });
+// ---------------------------------------------------------------- Destination + trajet
+// Tout se passe dans le navigateur : un worker charge les tuiles (zoom natif) autour du trajet,
+// devine ou l'on peut marcher en regardant l'image (eau, montagnes, murs) et trace le trajet (A*).
+const ROUTE_WORKER = `
+// Trajet a pied, calcule dans le navigateur a partir des tuiles de la carte (zoom natif).
+// On regarde l'image case par case : eau (bleu-vert), vide, montagnes (beaucoup de relief
+// sur une large zone) = bloque ; murs, arbres, rochers = a eviter (le trajet les contourne
+// mais peut y passer). Puis A* (8 directions, comme le jeu).
+const RELIEF = 31, MOUNTAIN = 37.5, EDGE = 3, SHADOW = .16, WATER = .5, GREEN = .25, CANOPY = 5;
+const MIN_HOLE = 12, SOFT_COST = 8, SNAP = 8, MAX_BOX = 1600;
+let cfg = null, have = null;
+const cache = new Map();   // 'monde/tx/ty' -> mesures par case de la tuile
+self.loadTileRGBA = self.loadTileRGBA || (async (tx, ty) => {
+  const r = await fetch(cfg.base + cfg.id + '/' + cfg.z + '/' + tx + '/' + ty + '.' + cfg.ext + '?v=' + cfg.v);
+  if (!r.ok) throw new Error('tuile ' + r.status);
+  const bmp = await createImageBitmap(await r.blob());
+  const c = new OffscreenCanvas(bmp.width, bmp.height), g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(bmp, 0, 0);
+  return { px: g.getImageData(0, 0, bmp.width, bmp.height).data, w: bmp.width, h: bmp.height };
+});
+function hasTile(tx, ty) {
+  if (!have) return true;
+  const i = ty * have.nx + tx;
+  return !!(have.bits[i >> 3] >> (i & 7) & 1);
+}
+function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
+  const CW = cfg.cw, CH = cfg.ch, nx = cfg.tcx, ny = cfg.tcy, n = nx * ny;
+  const f = { water: new Float32Array(n), voidc: new Float32Array(n), grad: new Float32Array(n),
+              dark: new Float32Array(n), green: new Float32Array(n) };
+  const lum = new Float32Array(W * H);
+  for (let i = 0, j = 0; i < W * H; i++, j += 4) lum[i] = (px[j] * 299 + px[j + 1] * 587 + px[j + 2] * 114) / 1000;
+  for (let y = 0; y < H; y++) {
+    const cy = (y / CH) | 0;
+    if (cy >= ny) break;
+    for (let x = 0; x < W; x++) {
+      const cx = (x / CW) | 0;
+      if (cx >= nx) break;
+      const i = y * W + x, j = i * 4, r = px[j], g = px[j + 1], b = px[j + 2], c = cy * nx + cx, l = lum[i];
+      if (b > r + 20 && g > r + 15) f.water[c]++;
+      if (Math.abs(r - 32) < 3 && Math.abs(g - 32) < 3 && Math.abs(b - 32) < 3) f.voidc[c]++;
+      if (l < 35) f.dark[c]++;
+      if (g > r + 8 && g > b + 8) f.green[c]++;
+      f.grad[c] += (x < W - 1 ? Math.abs(lum[i + 1] - l) : 0) + (y < H - 1 ? Math.abs(lum[i + W] - l) : 0);
+    }
+  }
+  const k = 1 / (CW * CH);
+  for (const a of Object.values(f)) for (let i = 0; i < n; i++) a[i] *= k;
+  return f;
+}
+function emptyTile() {
+  const n = cfg.tcx * cfg.tcy, f = { water: new Float32Array(n), voidc: new Float32Array(n).fill(1),
+    grad: new Float32Array(n), dark: new Float32Array(n), green: new Float32Array(n) };
+  return f;
+}
+async function tileFeat(tx, ty) {
+  const key = cfg.id + '/' + tx + '/' + ty;
+  let f = cache.get(key);
+  if (f) { cache.delete(key); cache.set(key, f); return f; }   // LRU
+  if (!hasTile(tx, ty)) f = emptyTile();
+  else { const t = await self.loadTileRGBA(tx, ty); f = measure(t.px, t.w, t.h); }
+  cache.set(key, f);
+  while (cache.size > 400) cache.delete(cache.keys().next().value);
+  return f;
+}
+function boxMean(a, w, h, k) {   // moyenne k x k, bords prolonges
+  const r = k >> 1, tmp = new Float32Array(w * h), out = new Float32Array(w * h);
+  const cx = x => x < 0 ? 0 : x >= w ? w - 1 : x, cy = y => y < 0 ? 0 : y >= h ? h - 1 : y;
+  for (let y = 0; y < h; y++) {
+    const o = y * w;
+    let s = 0;
+    for (let x = -r; x <= r; x++) s += a[o + cx(x)];
+    for (let x = 0; x < w; x++) { tmp[o + x] = s / k; s += a[o + cx(x + r + 1)] - a[o + cx(x - r)]; }
+  }
+  for (let x = 0; x < w; x++) {
+    let s = 0;
+    for (let y = -r; y <= r; y++) s += tmp[cy(y) * w + x];
+    for (let y = 0; y < h; y++) { out[y * w + x] = s / k; s += tmp[cy(y + r + 1) * w + x] - tmp[cy(y - r) * w + x]; }
+  }
+  return out;
+}
+async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite (Uint8Array bw*bh)
+  const tx0 = Math.floor(bx0 / cfg.tcx), tx1 = Math.floor((bx0 + bw - 1) / cfg.tcx);
+  const ty0 = Math.floor(by0 / cfg.tcy), ty1 = Math.floor((by0 + bh - 1) / cfg.tcy);
+  const n = bw * bh, water = new Float32Array(n), voidc = new Float32Array(n), grad = new Float32Array(n),
+        dark = new Float32Array(n), green = new Float32Array(n);
+  const total = (tx1 - tx0 + 1) * (ty1 - ty0 + 1);
+  let done = 0;
+  for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+    const f = await tileFeat(tx, ty);
+    const ox = tx * cfg.tcx, oy = ty * cfg.tcy;
+    for (let cy = 0; cy < cfg.tcy; cy++) {
+      const y = oy + cy - by0;
+      if (y < 0 || y >= bh) continue;
+      for (let cx = 0; cx < cfg.tcx; cx++) {
+        const x = ox + cx - bx0;
+        if (x < 0 || x >= bw) continue;
+        const s = cy * cfg.tcx + cx, d = y * bw + x;
+        water[d] = f.water[s]; voidc[d] = f.voidc[s]; grad[d] = f.grad[s]; dark[d] = f.dark[s]; green[d] = f.green[s];
+      }
+    }
+    if (++done % 4 === 0 || done === total) postMessage({ type: 'progress', id, done, total });
+  }
+  const rel5 = boxMean(grad, bw, bh, 5), rel13 = boxMean(grad, bw, bh, 13);
+  const core = new Float32Array(n);
+  for (let i = 0; i < n; i++) core[i] = rel13[i] > MOUNTAIN ? 1 : 0;
+  const near = boxMean(core, bw, bh, 2 * EDGE + 1);
+  const can = boxMean(green, bw, bh, 3), sh = boxMean(dark, bw, bh, 3);
+  // eau ; une riviere cachee sous des feuilles : l'eau s'etend sous le feuillage vert
+  let wet = new Float32Array(n);
+  for (let i = 0; i < n; i++) wet[i] = water[i] > WATER ? 1 : 0;
+  for (let it = 0; it < CANOPY; it++) {
+    const d = boxMean(wet, bw, bh, 3);
+    for (let i = 0; i < n; i++) if (!wet[i] && d[i] > 0 && can[i] > GREEN) wet[i] = 2;   // 2 : ajoute ce tour-ci
+    for (let i = 0; i < n; i++) if (wet[i]) wet[i] = 1;
+  }
+  const hard = new Uint8Array(n), soft = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    const relief = rel5[i] > RELIEF;
+    hard[i] = wet[i] || voidc[i] > .5 || (relief && near[i] > 0) ? 1 : 0;
+    soft[i] = !hard[i] && (relief || sh[i] > SHADOW) ? 1 : 0;
+  }
+  // petits trous marchables au milieu de l'eau / la montagne : bloques (sauf au bord de la boite)
+  const lab = new Int32Array(n), st = new Int32Array(n);
+  let nl = 0;
+  for (let s = 0; s < n; s++) {
+    if (hard[s] || lab[s]) continue;
+    nl++;
+    let sp = 0, cnt = 0, border = false;
+    st[sp++] = s; lab[s] = nl;
+    const cells = [];
+    while (sp) {
+      const p = st[--sp], x = p % bw, y = (p - x) / bw;
+      cnt++; if (cnt <= MIN_HOLE) cells.push(p);
+      if (x === 0 || y === 0 || x === bw - 1 || y === bh - 1) border = true;
+      if (x > 0 && !hard[p - 1] && !lab[p - 1]) { lab[p - 1] = nl; st[sp++] = p - 1; }
+      if (x < bw - 1 && !hard[p + 1] && !lab[p + 1]) { lab[p + 1] = nl; st[sp++] = p + 1; }
+      if (y > 0 && !hard[p - bw] && !lab[p - bw]) { lab[p - bw] = nl; st[sp++] = p - bw; }
+      if (y < bh - 1 && !hard[p + bw] && !lab[p + bw]) { lab[p + bw] = nl; st[sp++] = p + bw; }
+    }
+    if (cnt < MIN_HOLE && !border) for (const p of cells) { hard[p] = 1; soft[p] = 0; }
+  }
+  return { hard, soft };
+}
+function simplify(pts, eps) {   // Douglas-Peucker
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+  const st = [[0, pts.length - 1]];
+  while (st.length) {
+    const [a, b] = st.pop(), [ax, ay] = pts[a], [bx, by] = pts[b], L = Math.hypot(bx - ax, by - ay) || 1;
+    let far = -1, fd = eps;
+    for (let i = a + 1; i < b; i++) {
+      const d = Math.abs((bx - ax) * (ay - pts[i][1]) - (ax - pts[i][0]) * (by - ay)) / L;
+      if (d > fd) { fd = d; far = i; }
+    }
+    if (far >= 0) { keep[far] = 1; st.push([a, far], [far, b]); }
+  }
+  return pts.filter((p, i) => keep[i]);
+}
+function astar(hard, soft, bw, bh, s, d, edges) {   // -> {path} ou {touched} (la recherche a atteint le bord)
+  const n = bw * bh, g = new Float32Array(n).fill(Infinity), came = new Int32Array(n).fill(-1), done = new Uint8Array(n);
+  const tx = d % bw, ty = (d - tx) / bw;
+  const DX = [1, -1, 0, 0, 1, 1, -1, -1], DY = [0, 0, 1, -1, 1, -1, 1, -1];
+  const h = i => { const x = i % bw, ax = Math.abs(x - tx), ay = Math.abs((i - x) / bw - ty);
+                   return Math.max(ax, ay) + .4142 * Math.min(ax, ay); };
+  let hn = 0, hi = new Int32Array(1 << 14), hf = new Float64Array(1 << 14), touched = false;
+  const push = (i, f) => {
+    if (hn === hi.length) { const a = new Int32Array(hn * 2); a.set(hi); hi = a; const b = new Float64Array(hn * 2); b.set(hf); hf = b; }
+    let k = hn++;
+    while (k) { const p = (k - 1) >> 1; if (hf[p] <= f) break; hi[k] = hi[p]; hf[k] = hf[p]; k = p; }
+    hi[k] = i; hf[k] = f;
+  };
+  const pop = () => {
+    const top = hi[0], li = hi[--hn], lf = hf[hn];
+    let k = 0;
+    for (;;) {
+      let c = 2 * k + 1; if (c >= hn) break;
+      if (c + 1 < hn && hf[c + 1] < hf[c]) c++;
+      if (hf[c] >= lf) break;
+      hi[k] = hi[c]; hf[k] = hf[c]; k = c;
+    }
+    hi[k] = li; hf[k] = lf; return top;
+  };
+  g[s] = 0; push(s, h(s));
+  while (hn) {
+    const i = pop();
+    if (done[i]) continue;
+    done[i] = 1;
+    if (i === d) {
+      const path = [];
+      for (let p = d; p >= 0; p = came[p]) path.push(p);
+      return { path: path.reverse() };
+    }
+    const x = i % bw, y = (i - x) / bw;
+    if ((x === 0 && edges.l) || (y === 0 && edges.t) || (x === bw - 1 && edges.r) || (y === bh - 1 && edges.b)) touched = true;
+    for (let k = 0; k < 8; k++) {
+      const X = x + DX[k], Y = y + DY[k];
+      if (X < 0 || Y < 0 || X >= bw || Y >= bh) continue;
+      const j = Y * bw + X;
+      if (done[j] || hard[j]) continue;
+      if (k >= 4 && (hard[y * bw + X] || hard[Y * bw + x])) continue;   // pas de coin coupe
+      const c = g[i] + (k >= 4 ? 1.4142 : 1) * (soft[j] ? SOFT_COST : 1);
+      if (c >= g[j]) continue;
+      g[j] = c; came[j] = i; push(j, c + h(j));
+    }
+  }
+  return { touched };
+}
+function snap(hard, bw, bh, x, y) {   // case marchable la plus proche (rayon SNAP)
+  for (let r = 0; r <= SNAP; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+    if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+    const X = x + dx, Y = y + dy;
+    if (X >= 0 && Y >= 0 && X < bw && Y < bh && !hard[Y * bw + X]) return Y * bw + X;
+  }
+  return -1;
+}
+function enclosed(hard, bw, bh, s, edges) {   // la region de s ne touche aucun bord ouvert de la boite ?
+  const seen = new Uint8Array(bw * bh), st = [s];
+  seen[s] = 1;
+  const DX = [1, -1, 0, 0, 1, 1, -1, -1], DY = [0, 0, 1, -1, 1, -1, 1, -1];
+  while (st.length) {
+    const i = st.pop(), x = i % bw, y = (i - x) / bw;
+    if ((x === 0 && edges.l) || (y === 0 && edges.t) || (x === bw - 1 && edges.r) || (y === bh - 1 && edges.b)) return false;
+    for (let k = 0; k < 8; k++) {
+      const X = x + DX[k], Y = y + DY[k];
+      if (X < 0 || Y < 0 || X >= bw || Y >= bh) continue;
+      const j = Y * bw + X;
+      if (seen[j] || hard[j] || (k >= 4 && (hard[y * bw + X] || hard[Y * bw + x]))) continue;
+      seen[j] = 1; st.push(j);
+    }
+  }
+  return true;
+}
+async function localCheck(x, y, ox, oy, id) {   // 'blocked' (dans l'eau...), 'far' (ile sans l'autre bout) ou null
+  const C = cfg.cells, R = 160;
+  {   // d'abord tout pres : la case est-elle marchable ?
+    const r = SNAP + 2, bx0 = Math.max(0, x - r), by0 = Math.max(0, y - r);
+    const bw = Math.min(C, x + r + 1) - bx0, bh = Math.min(C, y + r + 1) - by0, { hard } = await analyse(bx0, by0, bw, bh, id);
+    if (snap(hard, bw, bh, x - bx0, y - by0) < 0) return 'blocked';
+  }
+  const bx0 = Math.max(0, x - R), by0 = Math.max(0, y - R), bx1 = Math.min(C, x + R + 1), by1 = Math.min(C, y + R + 1);
+  if (ox >= bx0 && ox < bx1 && oy >= by0 && oy < by1) return null;
+  const bw = bx1 - bx0, bh = by1 - by0, { hard } = await analyse(bx0, by0, bw, bh, id);
+  const s = snap(hard, bw, bh, x - bx0, y - by0);
+  return s >= 0 && enclosed(hard, bw, bh, s, { l: bx0 > 0, t: by0 > 0, r: bx1 < C, b: by1 < C }) ? 'far' : null;
+}
+async function route(m) {
+  const C = cfg.cells, dist = Math.max(Math.abs(m.dx - m.sx), Math.abs(m.dy - m.sy));
+  // loin : d'abord un coup d'oeil autour de chaque bout (une ile se voit tout de suite)
+  if (dist > 250) {
+    const d = await localCheck(m.dx, m.dy, m.sx, m.sy, m.id);
+    if (d) return d === 'far' ? { status: 'far' } : { status: 'blocked', which: 'dest' };
+    const s = await localCheck(m.sx, m.sy, m.dx, m.dy, m.id);
+    if (s) return s === 'far' ? { status: 'far' } : { status: 'blocked', which: 'start' };
+  }
+  let margin = Math.max(60, Math.round(dist * .35));
+  for (;;) {
+    const bbw = Math.abs(m.dx - m.sx), bbh = Math.abs(m.dy - m.sy);
+    margin = Math.min(margin, Math.max(40, (MAX_BOX - Math.max(bbw, bbh)) >> 1));   // memoire : boite <= MAX_BOX
+    const bx0 = Math.max(0, Math.min(m.sx, m.dx) - margin), by0 = Math.max(0, Math.min(m.sy, m.dy) - margin);
+    const bx1 = Math.min(C, Math.max(m.sx, m.dx) + margin + 1), by1 = Math.min(C, Math.max(m.sy, m.dy) + margin + 1);
+    const bw = bx1 - bx0, bh = by1 - by0;
+    const { hard, soft } = await analyse(bx0, by0, bw, bh, m.id);
+    const s = snap(hard, bw, bh, m.sx - bx0, m.sy - by0), d = snap(hard, bw, bh, m.dx - bx0, m.dy - by0);
+    if (s < 0 || d < 0) return { status: 'blocked', which: s < 0 ? 'start' : 'dest' };
+    const edges = { l: bx0 > 0, t: by0 > 0, r: bx1 < C, b: by1 < C };
+    const r = astar(hard, soft, bw, bh, s, d, edges);
+    if (r.path) {
+      const pts = r.path.map(p => [p % bw + bx0, Math.floor(p / bw) + by0]);
+      return { status: 'ok', steps: pts.length - 1, pts: simplify(pts, .7) };
+    }
+    if (!r.touched || enclosed(hard, bw, bh, d, edges)) return { status: 'far' };   // enferme : autre ile...
+    if (Math.max(bw, bh) >= MAX_BOX - 2 || margin <= 40) return { status: 'unknown' };  // pas trouve dans les environs
+    margin = Math.round(margin * 2.2);
+  }
+}
+let queue = Promise.resolve();
+onmessage = e => {
+  const m = e.data;
+  if (m.type === 'config') {
+    if (!cfg || cfg.id !== m.cfg.id) cache.clear();
+    cfg = m.cfg;
+    have = null;
+    if (cfg.have) {
+      const bin = atob(cfg.have[1]), bits = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bits[i] = bin.charCodeAt(i);
+      have = { nx: cfg.have[0], bits };
+    }
+    return;
+  }
+  queue = queue.then(() => route(m)).then(r => postMessage(Object.assign({ type: 'result', id: m.id }, r)),
+                                         err => postMessage({ type: 'result', id: m.id, status: 'nodata', error: String(err) }));
+};
+`;
+const destBtn = F('dest-btn'), destDlg = F('dest-dlg'), destIn = F('dest-input'), destErr = F('dest-err');
+const routeLayer = L.layerGroup().addTo(map);
+let dest = null, destMark = null, picking = false, route = null, destText = '';
+let rWorker = null, rLoaded = -1, rBusy = false, rAgain = false, rTimer = null, rLast = 0, rFarSaid = false, rSeq = 0;
+function destIcon() {
+  return L.divIcon({ className: 'dest-icon', iconSize: [28, 28], iconAnchor: [6, 27],
+    html: '<svg viewBox="0 0 28 28"><path d="M6 27V3" stroke="#1a1408" stroke-width="4" stroke-linecap="round"/>'
+        + '<path d="M6 27V3" stroke="#e9d9b0" stroke-width="2" stroke-linecap="round"/>'
+        + '<path d="M7 3h15l-4 5 4 5H7z" fill="#e8463c" stroke="#1a1408" stroke-width="1.5" stroke-linejoin="round"/></svg>' });
+}
+function destLabel(t) {
+  destText = t;
+  if (!destMark) return;
+  destMark.unbindTooltip();
+  if (t) destMark.bindTooltip(t, { permanent: true, direction: 'top', offset: [8, -26], className: 'pnj-label dest-label' });
+}
+function destDraw() {   // drapeau + trajet sur la carte affichee
+  if (destMark) { map.removeLayer(destMark); destMark = null; }
+  routeLayer.clearLayers();
+  if (!dest || 'world' + dest.w !== cur.id) return;
+  destMark = L.marker(fromGame(cur, dest.x, dest.y), { icon: destIcon(), draggable: true, keyboard: false,
+                                                       zIndexOffset: 1900 }).addTo(map);
+  destMark.on('dragend', () => destAt(destMark.getLatLng()));
+  destLabel(destText);
+  if (route && route.w === dest.w) {
+    const lls = route.pts.map(([x, y]) => fromGame(cur, x, y));
+    L.polyline(lls, { color: '#1a1408', weight: 7, opacity: .65, interactive: false }).addTo(routeLayer);
+    L.polyline(lls, { color: '#ffd75a', weight: 3.5, dashArray: '10 7', interactive: false }).addTo(routeLayer);
+  }
+}
+function setDest(w, x, y) {
+  dest = { w, x, y }; route = null; rFarSaid = false;
+  try { localStorage.setItem('t4c-dest', JSON.stringify(dest)); } catch (e) {}
+  destBtn.setAttribute('aria-pressed', true);
+  destText = 'Destination'; destDraw();
+  if (!mePos || mePos.w < 0) meToast('Drapeau placé. Partage ta position (bouton cible) pour voir le trajet.');
+  routeUpdate(true);
+}
+function destAt(latlng) {
+  const g = toGame(cur, latlng);
+  if (g) setDest(+cur.id.replace('world', ''), g.x, g.y);
+}
+function clearDest() {
+  dest = null; route = null;
+  try { localStorage.removeItem('t4c-dest'); } catch (e) {}
+  destBtn.setAttribute('aria-pressed', false);
+  destText = ''; destDraw();
+}
+function routeConfig(w) {   // le worker analyse les tuiles du monde w
+  if (!rWorker) {
+    rWorker = new Worker(URL.createObjectURL(new Blob([ROUTE_WORKER], { type: 'text/javascript' })));
+    rWorker.onmessage = routeDone;
+  }
+  if (rLoaded === w) return;
+  const m = byId['world' + w], z = m.maxZoom, cw = Math.round(32 * m.scale), ch = Math.round(16 * m.scale);
+  rWorker.postMessage({ type: 'config', cfg: { id: m.id, base: new URL('.', location.href).href, z, ext: m.ext, v: m.v,
+    have: m.have ? m.have[z] : null, cw, ch, tcx: m.tile / cw, tcy: m.tile / ch, cells: Math.round(m.width / cw) } });
+  rLoaded = w;
+}
+function routeUpdate(force) {   // appele quand la position ou la destination change
+  if (!dest) return;
+  if (!mePos || mePos.w < 0) { route = null; destLabel('Destination'); destDraw(); return; }
+  if (mePos.w !== dest.w) { route = null; destLabel('Autre monde : pas de trajet'); destDraw(); return; }
+  if (rBusy) { rAgain = true; return; }
+  const wait = 1000 - (Date.now() - rLast);   // au plus un calcul par seconde pendant la marche
+  if (!force && wait > 0) { clearTimeout(rTimer); rTimer = setTimeout(() => routeUpdate(true), wait); return; }
+  rBusy = true; rLast = Date.now();
+  routeConfig(dest.w);
+  rWorker.postMessage({ type: 'route', id: ++rSeq, sx: mePos.x, sy: mePos.y, dx: dest.x, dy: dest.y });
+}
+function routeDone(e) {
+  const r = e.data;
+  if (r.type === 'progress') {   // 1er calcul : on montre l'avancement de l'analyse
+    if (!route && r.id === rSeq && r.total > 4) destLabel('Analyse de la carte… ' + Math.round(r.done / r.total * 100) + ' %');
+    return;
+  }
+  rBusy = false;
+  if (r.id !== rSeq) { if (rAgain) { rAgain = false; routeUpdate(); } return; }   // resultat perime
+  if (dest) {
+    route = null;
+    if (r.status === 'ok') {
+      route = { w: dest.w, pts: r.pts };
+      destText = r.steps <= 2 ? 'Arrivé !' : '≈ ' + r.steps + ' pas';
+    } else if (r.status === 'far') {
+      destText = 'Pas accessible à pied';
+      if (!rFarSaid) { rFarSaid = true;
+        meToast('Pas de trajet à pied : la destination est sur une autre île, ou séparée par l’eau ou des montagnes.'); }
+    } else if (r.status === 'blocked') {
+      destText = r.which === 'dest' ? 'Destination dans l’eau ou la montagne' : 'Ta position : terrain non reconnu';
+    } else if (r.status === 'unknown') destText = 'Pas de trajet trouvé dans les environs';
+    else {
+      console.error('trajet :', r.error);
+      // page ouverte depuis le disque : le navigateur interdit de lire les pixels des tuiles
+      destText = location.protocol === 'file:' ? 'Trajet : ouvre le site en ligne' : 'Trajet indisponible';
+      if (location.protocol === 'file:')
+        meToast('Le trajet ne marche pas en ouvrant le fichier index.html : le navigateur interdit de lire '
+              + 'les images de la carte. Ouvre la carte depuis le site en ligne.');
+    }
+    destDraw();
+  }
+  if (rAgain) { rAgain = false; routeUpdate(); }
+}
+// fenetre Destination
+destBtn.onclick = () => {
+  destErr.textContent = ''; F('dest-clear').hidden = !dest;
+  if (dest) destIn.value = dest.x + ',' + dest.y + ',' + dest.w;
+  destDlg.showModal(); F('dest-pick').focus();
+};
+destDlg.querySelector('.x').onclick = () => destDlg.close();
+destDlg.addEventListener('click', e => { if (e.target === destDlg) destDlg.close(); });
+F('dest-pick').onclick = () => {
+  destDlg.close(); picking = true; document.body.classList.add('picking');
+  meToast('Clique sur la carte pour placer le drapeau (Échap : annuler).');
+};
+F('dest-clear').onclick = () => { clearDest(); destDlg.close(); };
+destDlg.querySelector('form').onsubmit = e => {
+  const n = (destIn.value.match(/-?\d+/g) || []).map(Number);
+  const w = n.length >= 3 ? n[2] : +cur.id.replace('world', ''), m = byId['world' + w];
+  if (n.length < 2 || !m) { e.preventDefault(); destErr.textContent = 'Écris X,Y,monde — par exemple 670,2215,0'; return; }
+  if (n[0] < 0 || n[1] < 0 || n[0] * CFG.cellW * m.scale >= m.width || n[1] * CFG.cellH * m.scale >= m.height) {
+    e.preventDefault(); destErr.textContent = 'Position hors de la carte ' + m.name + '.'; return;
+  }
+  if (m.id !== cur.id) show(m.id, { x: n[0], y: n[1], z: Math.max(map.getZoom(), m.maxZoom - 1) });
+  setDest(w, n[0], n[1]);
+};
+map.on('contextmenu', e => destAt(e.latlng));   // clic droit / appui long : destination
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && picking) { picking = false; document.body.classList.remove('picking'); }
+});
+
 const meShow = show;   // apres un changement de carte : montrer / cacher le marqueur
-show = (id, view) => { meShow(id, view); if ((meOn || meManual) && mePos) { const f = meFollow; meFollow = false; meDraw(); meFollow = f; } };
+show = (id, view) => { meShow(id, view); if ((meOn || meManual) && mePos) { const f = meFollow; meFollow = false; meDraw(); meFollow = f; }
+                       destDraw(); };
+try {   // destination gardee d'une visite a l'autre
+  const d = JSON.parse(localStorage.getItem('t4c-dest') || 'null');
+  if (d && byId['world' + d.w]) { dest = d; destText = 'Destination'; destBtn.setAttribute('aria-pressed', true); }
+} catch (e) {}
 
 window.addEventListener('hashchange', () => { const h = readHash(); if (h) show(h.id, h.view); });
 
