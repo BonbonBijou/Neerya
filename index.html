@@ -1546,8 +1546,11 @@ const ROUTE_WORKER = `
 // contourne mais peut y passer). Le pavage gris des villes a aussi beaucoup de relief : il reste
 // marchable (peu sature), et il n'y a jamais de montagne dans une zone "Ville" (zones-data.js).
 // Murs de maison : leurs planches et aretes sont verticales (les planchers, le sol : non).
+// Les montagnes ont toutes la meme roche : brun clair chaud (rouge > vert > bleu) et lumineuse.
+// Autour d'un massif, toute la roche de ce type est bloquee, jusqu'au bout des pics.
 // Puis A* (8 directions, comme le jeu).
 const SATP = .32, PLANK = 7.3, RELIEF = 31, MOUNTAIN = 37.5, EDGE = 3, SHADOW = .16, WATER = .5, GREEN = .25, CANOPY = 5;
+const ROCK = .06, ROCK_CORE = .15, ROCK_GROW = 10, TIP = 4;
 const MIN_HOLE = 12, SOFT_COST = 40, SNAP = 8, MAX_BOX = 1600;
 let cfg = null, have = null;
 const cache = new Map();   // 'monde/tx/ty' -> mesures par case de la tuile
@@ -1568,7 +1571,7 @@ function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
   const CW = cfg.cw, CH = cfg.ch, nx = cfg.tcx, ny = cfg.tcy, n = nx * ny;
   const f = { water: new Float32Array(n), voidc: new Float32Array(n), grad: new Float32Array(n),
               dark: new Float32Array(n), green: new Float32Array(n), sat: new Float32Array(n),
-              vert: new Float32Array(n) };
+              vert: new Float32Array(n), rock: new Float32Array(n) };
   const lum = new Float32Array(W * H);
   for (let i = 0, j = 0; i < W * H; i++, j += 4) lum[i] = (px[j] * 299 + px[j + 1] * 587 + px[j + 2] * 114) / 1000;
   for (let y = 0; y < H; y++) {
@@ -1582,6 +1585,7 @@ function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
       if (Math.abs(r - 32) < 3 && Math.abs(g - 32) < 3 && Math.abs(b - 32) < 3) f.voidc[c]++;
       if (l < 35) f.dark[c]++;
       if (g > r + 8 && g > b + 8) f.green[c]++;
+      if (r - g >= 6 && r - g <= 30 && g - b >= 5 && g - b <= 35 && l > 95 && l < 185) f.rock[c]++;   // roche des montagnes
       const mx = r > g ? (r > b ? r : b) : (g > b ? g : b), mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
       f.sat[c] += (mx - mn) / (mx + 1);
       const dx = x < W - 1 ? Math.abs(lum[i + 1] - l) : 0;
@@ -1597,7 +1601,7 @@ function measure(px, W, H) {   // mesures moyennes par case (CW x CH pixels)
 function emptyTile() {
   const n = cfg.tcx * cfg.tcy, f = { water: new Float32Array(n), voidc: new Float32Array(n).fill(1),
     grad: new Float32Array(n), dark: new Float32Array(n), green: new Float32Array(n), sat: new Float32Array(n),
-    vert: new Float32Array(n) };
+    vert: new Float32Array(n), rock: new Float32Array(n) };
   return f;
 }
 async function tileFeat(tx, ty) {
@@ -1630,7 +1634,7 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
   const tx0 = Math.floor(bx0 / cfg.tcx), tx1 = Math.floor((bx0 + bw - 1) / cfg.tcx);
   const ty0 = Math.floor(by0 / cfg.tcy), ty1 = Math.floor((by0 + bh - 1) / cfg.tcy);
   const n = bw * bh, water = new Float32Array(n), voidc = new Float32Array(n), grad = new Float32Array(n),
-        dark = new Float32Array(n), green = new Float32Array(n), sat = new Float32Array(n), vert = new Float32Array(n);
+        dark = new Float32Array(n), green = new Float32Array(n), sat = new Float32Array(n), vert = new Float32Array(n), rock = new Float32Array(n);
   const total = (tx1 - tx0 + 1) * (ty1 - ty0 + 1);
   let done = 0;
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
@@ -1644,7 +1648,7 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
         if (x < 0 || x >= bw) continue;
         const s = cy * cfg.tcx + cx, d = y * bw + x;
         water[d] = f.water[s]; voidc[d] = f.voidc[s]; grad[d] = f.grad[s]; dark[d] = f.dark[s]; green[d] = f.green[s];
-        sat[d] = f.sat[s]; vert[d] = f.vert[s];
+        sat[d] = f.sat[s]; vert[d] = f.vert[s]; rock[d] = f.rock[s];
       }
     }
     if (++done % 4 === 0 || done === total) postMessage({ type: 'progress', id, done, total });
@@ -1654,6 +1658,26 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
   const core = new Float32Array(n);   // massif de montagne : relief fort, roche brune, hors ville
   for (let i = 0; i < n; i++) core[i] = rel13[i] > MOUNTAIN && sat13[i] > SATP && !town[i] ? 1 : 0;
   const near = boxMean(core, bw, bh, 2 * EDGE + 1);
+  // massif entier : depuis le coeur, s'etend sur toute la roche voisine (bords et pointes des pics)
+  const rk = boxMean(rock, bw, bh, 5), mtn = new Float32Array(n);
+  for (let i = 0; i < n; i++) mtn[i] = (core[i] || (rel5[i] > RELIEF && near[i] > 0)) && rk[i] > ROCK_CORE ? 1 : 0;
+  for (let it = 0; it < ROCK_GROW; it++) {
+    const d = boxMean(mtn, bw, bh, 3);
+    for (let i = 0; i < n; i++) if (!mtn[i] && d[i] > 0 && rk[i] > ROCK && !town[i]) mtn[i] = 2;
+    for (let i = 0; i < n; i++) if (mtn[i]) mtn[i] = 1;
+  }
+  // pointes des pics : elles depassent au-dessus du massif (vue de biais) ; + 1 case de marge
+  for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+    const i = y * bw + x;
+    if (mtn[i] || town[i]) continue;
+    let hit = false;
+    for (let k = 1; k <= TIP && !hit && y + k < bh; k++) hit = mtn[i + k * bw] === 1 && rk[i] > 0;
+    if (!hit) for (let j = -1; j <= 1 && !hit; j++) for (let k = -1; k <= 1 && !hit; k++) {
+      const X = x + j, Y = y + k;
+      hit = X >= 0 && Y >= 0 && X < bw && Y < bh && mtn[Y * bw + X] === 1;
+    }
+    if (hit) mtn[i] = 2;
+  }
   const can = boxMean(green, bw, bh, 3), sh = boxMean(dark, bw, bh, 3), ve = boxMean(vert, bw, bh, 3);
   // eau ; une riviere cachee sous des feuilles : l'eau s'etend sous le feuillage vert
   let wet = new Float32Array(n);
@@ -1666,7 +1690,7 @@ async function analyse(bx0, by0, bw, bh, id) {   // -> {hard, soft} sur la boite
   const hard = new Uint8Array(n), soft = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     const relief = rel5[i] > RELIEF;
-    hard[i] = wet[i] || voidc[i] > .5 || (relief && near[i] > 0) ? 1 : 0;
+    hard[i] = wet[i] || voidc[i] > .5 || mtn[i] || (relief && near[i] > 0) ? 1 : 0;
     const plank = ve[i] > PLANK && sat5[i] > .30 && can[i] < GREEN;   // mur de planches (pas feuillage, pas pavage)
     soft[i] = !hard[i] && ((relief && sat5[i] > SATP) || sh[i] > SHADOW || plank) ? 1 : 0;   // pavage gris : marchable
   }
