@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Explorateur de cartes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,6 +52,39 @@
   #help-btn { flex: none; width: 30px; height: 30px; border: 1px solid var(--edge); border-radius: 50%;
               background: none; color: var(--edge-hi); font: 700 15px/1 var(--title); }
   #help-btn:hover { background: rgba(212,176,106,.16); color: #fff; }
+  /* Ma position (lue dans le client du jeu, sur ce PC) */
+  #me-btn { flex: none; width: 30px; height: 30px; display: grid; place-items: center; padding: 0;
+            border: 1px solid var(--edge); border-radius: 50%; background: none; color: var(--edge-hi); }
+  #me-btn svg { width: 16px; height: 16px; }
+  #me-btn:hover { background: rgba(212,176,106,.16); color: #fff; }
+  #me-btn[aria-pressed="true"] { background: var(--edge-hi); color: #1a1408; }
+  #me-btn.paused { background: rgba(212,176,106,.3); color: #fff; }
+  #me-btn:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+  .me-icon span { position: absolute; inset: 0; border-radius: 50%; background: #ffd75a;
+                  box-shadow: 0 0 0 3px #1a1408, 0 0 0 5px #ffd75a; }
+  .me-icon::before { content: ''; position: absolute; inset: -14px; border-radius: 50%;
+                     border: 2px solid #ffd75a; animation: me-pulse 1.6s ease-out infinite; }
+  #me-dlg { width: min(380px, calc(100vw - 24px)); padding: 0; color: var(--text); background: var(--panel-solid); }
+  #me-dlg::backdrop { background: rgba(0,0,0,.5); }
+  #me-dlg header { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--edge); }
+  #me-dlg h2 { flex: 1; margin: 0; font: 700 16px/1.2 var(--title); letter-spacing: .05em; color: var(--edge-hi); }
+  #me-dlg .x { width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
+  #me-dlg .x:hover { color: #fff; }
+  #me-dlg form { padding: 12px 14px 14px; }
+  #me-dlg p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; }
+  #me-dlg .row { display: flex; gap: 8px; }
+  #me-dlg input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 4px;
+                  background: rgba(0,0,0,.35); color: var(--text); font: 15px/1.2 ui-monospace, Consolas, monospace; }
+  #me-dlg input:focus { outline: 2px solid var(--edge-hi); outline-offset: 0; }
+  #me-dlg button[type=submit] { padding: 8px 14px; border: 1px solid var(--edge); border-radius: 4px;
+                  background: rgba(47,183,156,.16); color: var(--text); font-weight: 600; }
+  #me-dlg button[type=submit]:hover { background: rgba(47,183,156,.3); }
+  #me-dlg .err { color: #ff8a7a; min-height: 1.2em; margin: 6px 0 0; font-size: 13px; }
+  #me-dlg .share { width: 100%; margin: 0 0 14px; padding: 9px 12px; border: 1px solid var(--gem); border-radius: 4px;
+                   background: rgba(47,183,156,.22); color: #fff; font-weight: 600; }
+  #me-dlg .share:hover { background: rgba(47,183,156,.38); }
+  #me-dlg .share:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
+  @keyframes me-pulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
   #help-btn:focus-visible, #help .x:focus-visible, #help .btn:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: 1px; }
   /* Aide : comment contribuer (zones, PNJ, envoi des fichiers) */
   #help { width: min(560px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 24px); padding: 0; color: var(--text);
@@ -247,7 +281,7 @@
     #side { top: auto; left: 8px; right: 8px; bottom: 58px; width: auto; max-height: 60%; }
     .leaflet-control-zoom { display: none; }   /* zoom au doigt */
   }
-  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } .me-icon::before { animation: none; opacity: 0; } }
 </style>
 </head>
 <body>
@@ -256,6 +290,11 @@
 <aside id="panel" class="frame">
   <header>
     <h1>Cartes</h1>
+    <button id="me-btn" type="button" aria-pressed="false"
+            title="Ma position : partage la fenêtre du jeu, la carte suit ton personnage">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+        <circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+        <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg></button>
     <button id="help-btn" type="button" title="Aide : contribuer à la carte" aria-haspopup="dialog">?</button>
     <button id="toggle" aria-expanded="false" aria-controls="maps-nav" title="Menu">&#9776;</button>
   </header>
@@ -359,6 +398,24 @@
   <span class="xy" id="c-xy"><b>X</b>&ndash; &nbsp;<b>Y</b>&ndash;</span>
   <span class="hint">clic : copier</span>
 </div>
+<dialog id="me-dlg" class="frame" aria-labelledby="me-title">
+  <header>
+    <h2 id="me-title">Ma position</h2>
+    <button class="x" type="button" title="Fermer (Échap)" aria-label="Fermer">&times;</button>
+  </header>
+  <form method="dialog">
+    <p>Partage la fenêtre du jeu : la carte lit la position écrite sous la boussole (en bas à droite)
+       et suit ton personnage. Rien n'est envoyé : tout reste dans ton navigateur.</p>
+    <button type="button" class="share" id="me-share">Partager la fenêtre du jeu</button>
+    <p>Ou tape la position écrite sous la boussole, par exemple <b>670,2215,0</b> (X, Y, monde) :</p>
+    <div class="row">
+      <input id="me-input" inputmode="numeric" autocomplete="off" placeholder="X,Y,monde" aria-label="Position X,Y,monde">
+      <button type="submit">Y aller</button>
+    </div>
+    <p class="err" id="me-err" role="alert"></p>
+  </form>
+</dialog>
+
 <dialog id="help" class="frame" aria-labelledby="help-title">
   <header>
     <h2 id="help-title">Contribuer à la carte</h2>
@@ -410,10 +467,12 @@
 <img id="grab" alt="">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="zones-data.js"></script>
-<script src="pnj-data.js"></script>
+<script>   // donnees toujours fraiches (on les remplace a la main, sans regenerer la page)
+  for (const f of ['zones-data.js', 'pnj-data.js'])
+    document.write('<script src="' + f + '?t=' + Date.now() + '"><\/script>');
+</script>
 <script>
-const CFG = {"maps": [{"id": "world0", "file": "v2_worldmap", "name": "Monde principal", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+f////////////f///////////////////////////////////"], "6": [24, "////////////////////////////////////////////////"], "5": [12, "////////////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world1", "file": "v2_dungeonmap", "name": "Donjons", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/7/jIxx////3d//////38//////H///////n/8z///3zz8D//v+Y4cf/+P745wb/fv/hjxH4/P6Nn4H7//0NaMD7//DHf/wDfvPHP/gD/PPHDwAA/vPfn+AB//cP/+AB/ocP++MA/vP+/zM43+///jkY3+//nzkY//H/HzgA7+79h38A74bgx8c4BgAABwYw"], "6": [24, "///////////6//77///9//v+33se//8c//9t//9n//8Pv7xr"], "5": [12, "//////9/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world2", "file": "v2_cavernmap", "name": "Cavernes", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "AA98/M4/4P///sf/+P///f9///P/j99//vP/379//Pf//79//vd7/t8P/Pf5//9j/vH7/7/j/vP7/3vw/vv/7/9z//3/7/9z//7/gf8Af/4AAAAAH3wIAAAAD74/AAAA/v8fgAA//v8fzgP/fj4f38P///4f/4f//vx//s//Pv//jd//Hv//nt9/nv8AHuc/"], "6": [24, "/P/7////////////3//f///f/58P9wcA/7fx//f7////////"], "5": [12, "//////8/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world3", "file": "v2_underworld", "name": "Underworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/////////////////////////////////////////////////////////////38A//////8A//////8B//////sP//////sP///////////////////////////////////////////////////////////////////////////////////////////////+"], "6": [24, "//////////////////8f//8/////////////////////////"], "5": [12, "//////f/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world4", "file": "v2_leoworld", "name": "Leoworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "////fz4Q//////94//////85//////84////fz4w////fxy4////f38MAACA/38eAAAA/j8PAAAA/j8OAMAD+D8AeIAD+z8P+XCBjz8P+/CBjz8C+OCBhz8AePgBgD8AeDDhAQAAB4DhAWAA7gAAAGAA/gEAAAAA7ADAAwAA/sHDAwAATuADDwAAAEAADwAA"], "6": [24, "///v//9////n//9/APA3jvE3z7k37rkHzx0MHwAMnxkAyzEA"], "5": [12, "////2/d/f/IH"], "4": [6, "//8B"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world5", "file": "v2_extension01", "name": "Extension 1", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/8cBAAAA/+cBAAAA//8AAAA+/z8AAMAf/z8AAPAH/h0AAPADAAAAAPADAAAAAIADAA4AAAAADh/4AeAAP37wAfgDf3/wAPwH/v8AAPgDzP8AAOAAvv8AAAAAPHMAAAAAwA8AAAAAwA8AAAAA//////////8AAAAA///9ZwAQ///9ZwAQ///9ZwDQ///9ZwDw"], "6": [24, "/wEA/wB4fwA8AAAccx4M/xw+/wAe/wAAOAAA//////9A///A"], "5": [12, "H/5gf/dw//+P"], "4": [6, "9/8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world6", "file": "v2_extension02", "name": "Extension 2", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////sB//////8D//////8D/////78H//////8P//////8P/////z8A/////98B/////98H/////8sH/////wMAh////4MBAPj///8DAADg//8DAADg/38AAADg/38AAADg/38AABjg/38A4B/g//8H+A/g//8H8AH//38AAAD//38MAAD//38EAADg/38A"], "6": [24, "//8f//8///8///8f//8///8Z4P8fAPwPYPwPfvw/HP8vAP8v"], "5": [12, "//d//8d/72d/"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}, {"id": "world7", "file": "v2_extension03", "name": "Extension 3", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/v///wEA/v3//wEA/v37/wAAf3z4/AAA////HwAA//37DwAA////AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AD4AAAAAAP4AHAAAAH4APgAAAP4APwAAAP4AfwAAAD4AfgAAAAAAAAMAABwA/wcAAHwA/wIAAHwA/wMAAHgA/wMAAAAA/wAAAAAA"], "6": [24, "//8B//8A/38A/w8A/w8A/w8HBgAPBwAPDwAHPwAOHwAOHwAA"], "5": [12, "//EPPzMwB3Mw"], "4": [6, "3zUB"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25}], "cellW": 32, "cellH": 16, "cursor": {"hot": [0, 0], "anim": false}, "grab": {"hot": [0, 13], "anim": true}};
+const CFG = {"maps": [{"id": "world0", "file": "v2_worldmap", "name": "Monde principal", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+f////////////f///////////////////////////////////"], "6": [24, "////////////////////////////////////////////////"], "5": [12, "////////////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869830}, {"id": "world1", "file": "v2_dungeonmap", "name": "Donjons", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/7/jIxx////3d//////38//////H///////n/8z///3zz8D//v+Y4cf/+P745wb/fv/hjxH4/P6Nn4H7//0NaMD7//DHf/wDfvPHP/gD/PPHDwAA/vPfn+AB//cP/+AB/ocP++MA/vP+/zM43+///jkY3+//nzkY//H/HzgA7+79h38A74bgx8c4BgAABwYw"], "6": [24, "///////////6//77///9//v+33se//8c//9t//9n//8Pv7xr"], "5": [12, "//////9/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869868}, {"id": "world2", "file": "v2_cavernmap", "name": "Cavernes", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "AA98/M4/4P///sf/+P///f9///P/j99//vP/379//Pf//79//vd7/t8P/Pf5//9j/vH7/7/j/vP7/3vw/vv/7/9z//3/7/9z//7/gf8Af/4AAAAAH3wIAAAAD74/AAAA/v8fgAA//v8fzgP/fj4f38P///4f/4f//vx//s//Pv//jd//Hv//nt9/nv8AHuc/"], "6": [24, "/P/7////////////3//f///f/58P9wcA/7fx//f7////////"], "5": [12, "//////8/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869911}, {"id": "world3", "file": "v2_underworld", "name": "Underworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/////////////////////////////////////////////////////////////38A//////8A//////8B//////sP//////sP///////////////////////////////////////////////////////////////////////////////////////////////+"], "6": [24, "//////////////////8f//8/////////////////////////"], "5": [12, "//////f/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869995}, {"id": "world4", "file": "v2_leoworld", "name": "Leoworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "////fz4Q//////94//////85//////84////fz4w////fxy4////f38MAACA/38eAAAA/j8PAAAA/j8OAMAD+D8AeIAD+z8P+XCBjz8P+/CBjz8C+OCBhz8AePgBgD8AeDDhAQAAB4DhAWAA7gAAAGAA/gEAAAAA7ADAAwAA/sHDAwAATuADDwAAAEAADwAA"], "6": [24, "///v//9////n//9/APA3jvE3z7k37rkHzx0MHwAMnxkAyzEA"], "5": [12, "////2/d/f/IH"], "4": [6, "//8B"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870039}, {"id": "world5", "file": "v2_extension01", "name": "Extension 1", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/8cBAAAA/+cBAAAA//8AAAA+/z8AAMAf/z8AAPAH/h0AAPADAAAAAPADAAAAAIADAA4AAAAADh/4AeAAP37wAfgDf3/wAPwH/v8AAPgDzP8AAOAAvv8AAAAAPHMAAAAAwA8AAAAAwA8AAAAA//////////8AAAAA///9ZwAQ///9ZwAQ///9ZwDQ///9ZwDw"], "6": [24, "/wEA/wB4fwA8AAAccx4M/xw+/wAe/wAAOAAA//////9A///A"], "5": [12, "H/5gf/dw//+P"], "4": [6, "9/8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870071}, {"id": "world6", "file": "v2_extension02", "name": "Extension 2", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////sB//////8D//////8D/////78H//////8P//////8P/////z8A/////98B/////98H/////8sH/////wMAh////4MBAPj///8DAADg//8DAADg/38AAADg/38AAADg/38AABjg/38A4B/g//8H+A/g//8H8AH//38AAAD//38MAAD//38EAADg/38A"], "6": [24, "//8f//8///8///8f//8///8Z4P8fAPwPYPwPfvw/HP8vAP8v"], "5": [12, "//d//8d/72d/"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870147}, {"id": "world7", "file": "v2_extension03", "name": "Extension 3", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/v///wEA/v3//wEA/v37/wAAf3z4/AAA////HwAA//37DwAA////AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AD4AAAAAAP4AHAAAAH4APgAAAP4APwAAAP4AfwAAAD4AfgAAAAAAAAMAABwA/wcAAHwA/wIAAHwA/wMAAHgA/wMAAAAA/wAAAAAA"], "6": [24, "//8B//8A/38A/w8A/w8A/w8HBgAPBwAPDwAHPwAOHwAOHwAA"], "5": [12, "//EPPzMwB3Mw"], "4": [6, "3zUB"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870186}], "cellW": 32, "cellH": 16, "cursor": {"hot": [0, 0], "anim": false}, "grab": {"hot": [0, 13], "anim": true}};
 const byId = Object.fromEntries(CFG.maps.map(m => [m.id, m]));
 
 const map = L.map('map', { crs: L.CRS.Simple, minZoom: 0, zoomSnap: 0.5,
@@ -446,7 +505,7 @@ const Tiles = L.TileLayer.extend({
       const key = m.id + '/' + c.z;
       const bits = haveBits[key] || (haveBits[key] = Uint8Array.from(atob(h[1]), ch => ch.charCodeAt(0)));
       const i = c.y * h[0] + c.x;
-      if (!(bits[i >> 3] >> (i & 7) & 1)) return 'empty.' + m.ext;
+      if (!(bits[i >> 3] >> (i & 7) & 1)) return 'empty.' + m.ext + '?v=' + m.v;
     }
     return L.TileLayer.prototype.getTileUrl.call(this, c);
   }
@@ -459,7 +518,7 @@ function show(id, view) {
   if (layer) map.removeLayer(layer);
   cur = m;
   const b = bounds(m);
-  layer = new Tiles(m.id + '/{z}/{x}/{y}.' + m.ext, {
+  layer = new Tiles(m.id + '/{z}/{x}/{y}.' + m.ext + '?v=' + m.v, {
     tileSize: m.tile, minZoom: 0, maxNativeZoom: m.maxZoom, maxZoom: m.maxZoom + 2,
     noWrap: true, bounds: b, keepBuffer: 2
   }).addTo(map);
@@ -1178,6 +1237,252 @@ F('help-copy').onclick = () => {
   const done = () => { b.textContent = 'Adresse copiée ✓'; setTimeout(() => b.textContent = "Copier l'adresse", 1600); };
   if (navigator.clipboard) navigator.clipboard.writeText('ericwebprogrammer@gmail.com').then(done, done); else done();
 };
+
+// Ma position : partage d'ecran de la fenetre du jeu ; on lit le texte "X,Y,monde"
+// ecrit sous la boussole (en bas a droite). Tout se passe dans le navigateur.
+// 1er clic : partage puis suivi. Glisser la carte met le suivi en pause
+// (clic : on recentre). Clic pendant le suivi : arret du partage.
+const DIGITS = {
+  0: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  1: ['..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'],
+  2: ['.###.', '#...#', '....#', '...#.', '..#..', '.#...', '#####'],
+  3: ['.###.', '#...#', '....#', '..##.', '....#', '#...#', '.###.'],
+  4: ['...#.', '..##.', '.#.#.', '#..#.', '#####', '...#.', '...#.'],
+  5: ['#####', '#....', '####.', '....#', '....#', '#...#', '.###.'],
+  6: ['..##.', '.#...', '#....', '####.', '#...#', '#...#', '.###.'],
+  7: ['#####', '....#', '...#.', '...#.', '..#..', '..#..', '..#..'],
+  8: ['.###.', '#...#', '#...#', '.###.', '#...#', '#...#', '.###.'],
+  9: ['.###.', '#...#', '#...#', '.####', '....#', '...#.', '.##..'],
+};
+// rgba : Uint8ClampedArray de l'image (largeur W), zone [x0, x1[ x [y0, y1[
+function readCompass(rgba, W, x0, y0, x1, y1) {   // plusieurs seuils de luminosite (ecrans, gamma, flou)
+  for (const t of [90, 120, 65]) { const p = readCompassAt(rgba, W, x0, y0, x1, y1, t); if (p) return p; }
+  return null;
+}
+function readCompassAt(rgba, W, x0, y0, x1, y1, lum) {
+  const w = x1 - x0, h = y1 - y0, mask = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = ((y + y0) * W + x + x0) * 4, r = rgba[i], g = rgba[i + 1], b = rgba[i + 2];
+    // texte clair et chaud sur le fond sombre de la boussole. On teste la luminosite, pas la teinte
+    // exacte : la video du partage d'ecran (YUV 4:2:0) delave la couleur des traits d'un pixel.
+    if (.299 * r + .587 * g + .114 * b > lum && r >= b) mask[y * w + x] = 1;
+  }
+  // composantes connexes (8 voisins) ; les grosses taches (terrain beige) sont ignorees
+  const seen = new Uint8Array(w * h), comps = [], stack = [];
+  for (let s = 0; s < w * h; s++) {
+    if (!mask[s] || seen[s]) continue;
+    let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1, n = 0;
+    stack.push(s); seen[s] = 1;
+    while (stack.length) {
+      const p = stack.pop(), px = p % w, py = (p - px) / w;
+      n++; if (px < minx) minx = px; if (px > maxx) maxx = px; if (py < miny) miny = py; if (py > maxy) maxy = py;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const qx = px + dx, qy = py + dy;
+        if (qx < 0 || qy < 0 || qx >= w || qy >= h) continue;
+        const q = qy * w + qx;
+        if (mask[q] && !seen[q]) { seen[q] = 1; stack.push(q); }
+      }
+    }
+    const cw = maxx - minx + 1, ch = maxy - miny + 1;
+    if (ch <= 60 && cw <= 60) comps.push({ minx, miny, maxx, maxy, w: cw, h: ch, n });
+  }
+  comps.sort((a, b) => a.minx - b.minx);
+  const digit = c => {   // gabarit 5x7 le plus proche (taux de remplissage de chaque case)
+    const cols = c.w / c.h < .58 ? 3 : 5, off = (5 - cols) / 2;   // le 1 est etroit
+    const cell = [];
+    for (let r = 0; r < 7; r++) for (let k = 0; k < cols; k++) {
+      const xa = c.minx + k * c.w / cols, xb = c.minx + (k + 1) * c.w / cols;
+      const ya = c.miny + r * c.h / 7, yb = c.miny + (r + 1) * c.h / 7;
+      let on = 0, n = 0;
+      for (let y = Math.floor(ya); y < Math.ceil(yb); y++) for (let x = Math.floor(xa); x < Math.ceil(xb); x++) {
+        const f = (Math.min(x + 1, xb) - Math.max(x, xa)) * (Math.min(y + 1, yb) - Math.max(y, ya));
+        if (f > 0) { n += f; on += f * mask[y * w + x]; }
+      }
+      cell[r * 5 + k + off] = on / n;
+    }
+    let best = null, bestD = 1e9, second = 1e9;
+    for (const d in DIGITS) {
+      let dist = 0;
+      for (let r = 0; r < 7; r++) for (let k = 0; k < 5; k++) {
+        const v = cell[r * 5 + k] || 0, t = DIGITS[d][r][k] === '#' ? 1 : 0;
+        dist += Math.abs(v - t);
+      }
+      if (dist < bestD) { second = bestD; bestD = dist; best = d; } else if (dist < second) second = dist;
+    }
+    return bestD <= 11 && second - bestD >= 1 ? best : null;   // assez proche, et sans ambiguite
+  };
+  const isDigit = c => c.h >= 6 && c.w <= c.h && c.w * 7 >= c.h * 1.5;
+  for (let i = 0; i < comps.length; i++) {
+    const d0 = comps[i];
+    if (!isDigit(d0)) continue;
+    const u = d0.h / 7;
+    // debut de ligne seulement : sinon un premier chiffre illisible donnerait "9,1234,7" pour "3489,1234,7"
+    if (comps.some(c => c !== d0 && c.maxx < d0.minx && d0.minx - c.maxx <= 5 * u &&
+                        c.maxy >= d0.miny && c.miny <= d0.maxy + 3 * u && c.h >= 2 * u)) continue;
+    let txt = '', cur = d0;
+    for (;;) {
+      if (cur === d0 || isDigit(cur) && Math.abs(cur.maxy - d0.maxy) <= u * .7 && Math.abs(cur.h - d0.h) <= u) {
+        const g = digit(cur); if (g === null) break; txt += g;
+      } else txt += ',';
+      let next = null;   // composante suivante, juste a droite, sur la meme ligne
+      for (let j = i + 1; j < comps.length; j++) {
+        const c = comps[j];
+        if (c.minx <= cur.maxx || c.minx - cur.maxx > 5 * u) continue;
+        const asDigit = isDigit(c) && Math.abs(c.maxy - d0.maxy) <= u * .7 && Math.abs(c.h - d0.h) <= u;
+        const asComma = c.h <= 4 * u && c.w <= 2.5 * u && c.miny >= d0.miny + 4 * u && c.maxy <= d0.maxy + 3.5 * u;
+        if ((asDigit || asComma) && (!next || c.minx < next.minx)) next = c;
+      }
+      if (!next) break;
+      cur = next;
+    }
+    const m = /^(\d{1,4}),(\d{1,4}),(\d)$/.exec(txt);
+    if (m) return { x: +m[1], y: +m[2], w: +m[3],
+                    box: [x0 + d0.minx, y0 + d0.miny, x0 + cur.maxx + 1, y0 + d0.maxy + 1] };
+  }
+  return null;
+}
+
+const meBtn = F('me-btn');
+let meOn = false, meFollow = false, meTimer = null, mePos = null, meMark = null;
+let meStream = null, meVideo = null, meCanvas = null, meBox = null, meMiss = 0, meLast = null, meSeen = 0, meWarned = false;
+function meState() {
+  meBtn.setAttribute('aria-pressed', meOn && meFollow);
+  meBtn.classList.toggle('paused', meOn && !meFollow);
+  meBtn.title = !meOn ? 'Ma position : partage la fenêtre du jeu, la carte suit ton personnage'
+              : meFollow ? 'Suivi de ton personnage (clic : arrêter)' : 'Suivi en pause (clic : recentrer)';
+}
+function meToast(t) {
+  toast.textContent = t; toast.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+function meStop(msg) {
+  meOn = meFollow = false; if (meTimer) { meTimer.terminate(); meTimer = null; } mePos = null; meBox = null; meLast = null;
+  if (meStream) { meStream.getTracks().forEach(t => t.stop()); meStream = null; }
+  if (meVideo) { meVideo.remove(); meVideo = null; }
+  if (meMark) { map.removeLayer(meMark); meMark = null; }
+  meState(); if (msg) meToast(msg);
+}
+function meDraw() {
+  const id = mePos && 'world' + mePos.w;
+  if (!mePos || !byId[id]) return;
+  if (meFollow && id !== cur.id) show(id, { x: mePos.x, y: mePos.y, z: Math.max(map.getZoom(), byId[id].maxZoom - 1) });
+  if (id !== cur.id) { if (meMark) { map.removeLayer(meMark); meMark = null; } return; }
+  const ll = fromGame(cur, mePos.x, mePos.y);
+  if (!meMark) meMark = L.marker(ll, { icon: L.divIcon({ className: 'me-icon', iconSize: [12, 12], html: '<span></span>' }),
+                                       interactive: false, keyboard: false, zIndexOffset: 2000 }).addTo(map);
+  else meMark.setLatLng(ll);
+  if (meFollow) map.panTo(ll, { animate: true, duration: .4 });
+}
+function meInMap(p) {
+  const m = byId['world' + p.w];
+  return m && p.x * CFG.cellW * m.scale < m.width && p.y * CFG.cellH * m.scale < m.height;
+}
+function meTick() {
+  const v = meVideo, W = v && v.videoWidth, H = v && v.videoHeight;
+  if (!W || !H) return;
+  if (meCanvas.width !== W || meCanvas.height !== H) { meCanvas.width = W; meCanvas.height = H; }
+  // zone cherchee : autour de la derniere lecture, sinon le quart en bas a droite, parfois l'image entiere
+  let r;
+  if (meBox) {
+    const bh = meBox[3] - meBox[1], pad = bh * 4;
+    r = [Math.max(0, meBox[0] - pad), Math.max(0, meBox[1] - pad), Math.min(W, meBox[2] + pad), Math.min(H, meBox[3] + pad)];
+  } else r = meMiss % 6 === 5 ? [0, 0, W, H] : [W >> 1, H >> 1, W, H];
+  const ctx = meCanvas.getContext('2d', { willReadFrequently: true });
+  const rw = r[2] - r[0], rh = r[3] - r[1];
+  ctx.drawImage(v, r[0], r[1], rw, rh, 0, 0, rw, rh);
+  const p = readCompass(ctx.getImageData(0, 0, rw, rh).data, rw, 0, 0, rw, rh);
+  if (p) p.box = [p.box[0] + r[0], p.box[1] + r[1], p.box[2] + r[0], p.box[3] + r[1]];
+  if (!p || !meInMap(p)) {
+    meBox = null; meMiss++;
+    if (!meWarned && Date.now() - meSeen > 6000) {
+      meWarned = true;
+      const d = ctx.getImageData(0, 0, rw, rh).data;
+      let lit = 0;
+      for (let i = 0; i < d.length; i += 4 * 97) if (d[i] + d[i + 1] + d[i + 2] > 30) lit++;
+      meToast(lit < d.length / (4 * 97) * .01
+        ? 'L’image partagée est noire : arrête le partage et choisis plutôt « Écran entier ».'
+        : 'Boussole introuvable : partage la fenêtre du jeu (pas réduite), avec la boussole visible.');
+    }
+    return;
+  }
+  meBox = p.box; meMiss = 0; meSeen = Date.now(); meWarned = false;
+  // une lecture isolee tres loin (teleportation ou erreur) doit se confirmer une 2e fois
+  const near = mePos && p.w === mePos.w && Math.abs(p.x - mePos.x) + Math.abs(p.y - mePos.y) <= 40;
+  const same = meLast && p.w === meLast.w && p.x === meLast.x && p.y === meLast.y;
+  meLast = p;
+  if (!near && !same) return;
+  if (mePos && p.w === mePos.w && p.x === mePos.x && p.y === mePos.y) return;
+  const first = !mePos;
+  mePos = { w: p.w, x: p.x, y: p.y };
+  if (first) {   // 1re lecture : on zoome sur le personnage
+    meToast('Position trouvée : ' + p.x + ', ' + p.y + ' — ' + byId['world' + p.w].name);
+    if (meFollow && 'world' + p.w === cur.id)
+      map.setView(fromGame(cur, p.x, p.y), Math.max(map.getZoom(), cur.maxZoom - 1), { animate: false });
+  }
+  meDraw();
+}
+async function meStart() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    meAsk(); meErr.textContent = 'Ce navigateur ne permet pas le partage d’écran : tape ta position.'; return;
+  }
+  meToast('Choisis la fenêtre « The 4th Coming » puis « Partager »');
+  let st;
+  // un site ne peut pas choisir la fenetre lui-meme (securite du navigateur) : on ouvre au moins
+  // la liste sur l'onglet "Fenetre", sans les onglets du navigateur
+  try { st = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 4, displaySurface: 'window' }, audio: false,
+                                                            selfBrowserSurface: 'exclude', surfaceSwitching: 'include' }); }
+  catch (e) { meAsk(); return; }   // refuse / annule : saisie a la main
+  if (meDlg.open) meDlg.close();
+  meManual = false; meStop();
+  meStream = st;
+  st.getVideoTracks()[0].addEventListener('ended', () => meStop('Partage d’écran arrêté.'));
+  meVideo = document.createElement('video');
+  meVideo.muted = true; meVideo.playsInline = true;
+  meVideo.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+  document.body.appendChild(meVideo);
+  meVideo.srcObject = st;
+  try { await meVideo.play(); } catch (e) {}
+  meCanvas = meCanvas || document.createElement('canvas');
+  meOn = meFollow = true; mePos = null; meMiss = 0; meSeen = Date.now(); meWarned = false; meState();
+  // minuterie dans un worker : Chrome ralentit les minuteries d'une page cachee (derriere le jeu)
+  try {
+    meTimer = new Worker(URL.createObjectURL(new Blob(['setInterval(() => postMessage(0), 500)'], { type: 'text/javascript' })));
+    meTimer.onmessage = meTick;
+  } catch (e) { const id = setInterval(meTick, 500); meTimer = { terminate: () => clearInterval(id) }; }
+}
+// Saisie a la main de la position affichee sur la carte TAB du jeu ("X,Y,monde")
+const meDlg = F('me-dlg'), meIn = F('me-input'), meErr = F('me-err');
+let meManual = false;
+function meAsk() { meErr.textContent = ''; if (!meDlg.open) meDlg.showModal(); meIn.select(); }
+meDlg.querySelector('.x').onclick = () => meDlg.close();
+F('me-share').onclick = meStart;
+meDlg.addEventListener('click', e => { if (e.target === meDlg) meDlg.close(); });
+meDlg.querySelector('form').onsubmit = e => {
+  const n = (meIn.value.match(/-?\d+/g) || []).map(Number);
+  const w = n.length >= 3 ? n[2] : +cur.id.replace('world', '');
+  const m = byId['world' + w];
+  if (n.length < 2 || !m) { e.preventDefault(); meErr.textContent = 'Écris X,Y,monde — par exemple 670,2215,0'; return; }
+  if (n[0] < 0 || n[1] < 0 || n[0] * CFG.cellW * m.scale >= m.width || n[1] * CFG.cellH * m.scale >= m.height) {
+    e.preventDefault(); meErr.textContent = 'Position hors de la carte ' + m.name + '.'; return;
+  }
+  meStop(); mePos = { w, x: n[0], y: n[1] }; meManual = true;
+  const z = Math.max(map.getZoom(), m.maxZoom - 1);
+  if (m.id !== cur.id) show(m.id, { x: n[0], y: n[1], z });
+  else map.setView(fromGame(m, n[0], n[1]), z);
+  meDraw();
+  meToast('Position : ' + n[0] + ', ' + n[1] + ' — ' + m.name);
+};
+meBtn.onclick = () => {
+  if (meManual) { meManual = false; meStop(); return; }   // re-clic : on retire le marqueur pose a la main
+  if (meOn && meFollow) return meStop();
+  if (meOn) { meFollow = true; meState(); meDraw(); return; }
+  meAsk();   // d'abord l'explication ; le bouton "Partager la fenetre du jeu" lance le partage
+  F('me-share').focus();
+};
+map.on('dragstart', () => { if (meOn && meFollow) { meFollow = false; meState(); } });
+map.on('zoomend', () => { if (meOn && meFollow && meMark) map.panTo(meMark.getLatLng(), { animate: false }); });
+const meShow = show;   // apres un changement de carte : montrer / cacher le marqueur
+show = (id, view) => { meShow(id, view); if ((meOn || meManual) && mePos) { const f = meFollow; meFollow = false; meDraw(); meFollow = f; } };
 
 window.addEventListener('hashchange', () => { const h = readHash(); if (h) show(h.id, h.view); });
 
