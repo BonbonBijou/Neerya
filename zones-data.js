@@ -4122,7 +4122,7 @@ window.ZONES = [
   "name": "Ville des voleurs",
   "type": "Ville",
   "color": "#d4b06a",
-  "desc": "Accessible après avoir traversé la cave des brigands",
+  "desc": "Accessible après avoir traversé la cave des brigands accessible à 2201,1464",
   "points": [
    [
     2117,

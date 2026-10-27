@@ -182,8 +182,9 @@
   #side { position: absolute; z-index: 1000; top: 12px; right: 12px; bottom: 76px; width: 300px;
           display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
   #side > * { pointer-events: auto; }
-  #g-pnj { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
-  #g-pnj[hidden] { display: none; }
+  #g-pnj, #g-mob { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #g-mob { flex-shrink: 0; max-height: 40%; }   /* la longue liste des PNJ cede la place, pas celle-ci */
+  #g-pnj[hidden], #g-mob[hidden] { display: none; }
   .side-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px;
                border: 0; background: none; color: var(--edge-hi); font: 700 13px/1.2 var(--title);
                letter-spacing: .08em; text-transform: uppercase; text-align: left; }
@@ -192,8 +193,9 @@
   .side-head:hover::after { color: var(--text); }
   .side-head .n { color: var(--muted); font-weight: 500; letter-spacing: 0; }
   .side-head:focus-visible { outline: 2px solid var(--edge-hi); outline-offset: -2px; }
-  #pnj-body { display: flex; flex-direction: column; min-height: 0; padding: 6px; border-top: 1px solid var(--edge); }
-  #g-pnj.closed #pnj-body { display: none; }
+  #pnj-body, #mob-body { display: flex; flex-direction: column; min-height: 0; padding: 6px; border-top: 1px solid var(--edge); }
+  #g-pnj.closed #pnj-body, #g-mob.closed #mob-body { display: none; }
+  .list.pnj.mob button::before { border-radius: 1px; transform: rotate(45deg) scale(.85); }   /* losange : monstre */
   .list.pnj { flex: 1 1 auto; min-height: 0; margin: 0; overflow-y: auto; }
   .list.pnj button::before { border-radius: 50%; transform: none; background: var(--c); border-color: rgba(0,0,0,.6); }
   .list button small { margin-left: auto; padding-left: 6px; color: var(--muted); font-size: 11px; white-space: nowrap; }
@@ -225,6 +227,11 @@
                color: var(--text); font: 600 12px var(--ui); padding: 1px 6px; box-shadow: none; }
   .pnj-label::before { display: none; }
   .drawing .pnj-icon { pointer-events: none; }
+  /* Monstres : losange ; boss : plus grand, avec un crane */
+  .pnj-icon.mob span { border-radius: 2px; transform: rotate(45deg) scale(.82); }
+  .pnj-icon.boss span { position: relative; }
+  .pnj-icon.boss span::after { content: ''; position: absolute; inset: 8%; transform: rotate(-45deg);
+                               background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23fff' stroke='%231a140c' stroke-width='1.1' paint-order='stroke' d='M8 1.5C4.4 1.5 2.5 4 2.5 6.8c0 1.7.8 2.9 1.9 3.6V13h2v-1.5h1.2V13h.8v-1.5h1.2V13h2v-2.6c1.1-.7 1.9-1.9 1.9-3.6C13.5 4 11.6 1.5 8 1.5z'/%3E%3Ccircle cx='5.8' cy='7.2' r='1.4' fill='%231a140c'/%3E%3Ccircle cx='10.2' cy='7.2' r='1.4' fill='%231a140c'/%3E%3C/svg%3E") center / contain no-repeat; }
 
   /* Zones */
   .list.zones button::before { background: var(--c); border-color: rgba(0,0,0,.6); }
@@ -264,6 +271,12 @@
   #info h2 { margin: 2px 24px 8px 0; font: 700 18px/1.25 var(--title); color: var(--edge-hi); }
   #info .desc { margin: 0 0 10px; white-space: pre-line; }
   #info .desc a { color: var(--gem); word-break: break-all; }
+  #info .desc a.coord { word-break: normal; white-space: nowrap; text-decoration: underline dotted; }
+  #info .desc a.coord::before { content: ''; display: inline-block; width: .6em; height: .8em; margin-right: .25em;
+                               vertical-align: -.05em; background: currentColor;
+                               -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 16'%3E%3Cpath d='M6 0C2.7 0 0 2.6 0 5.9 0 10.3 6 16 6 16s6-5.7 6-10.1C12 2.6 9.3 0 6 0zm0 8.2a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 16'%3E%3Cpath d='M6 0C2.7 0 0 2.6 0 5.9 0 10.3 6 16 6 16s6-5.7 6-10.1C12 2.6 9.3 0 6 0zm0 8.2a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z'/%3E%3C/svg%3E") center / contain no-repeat; }
+  .coord-ping { animation: coord-ping 1.2s ease-out 4; }
+  @keyframes coord-ping { from { stroke-width: 8; stroke-opacity: 1; } to { stroke-width: 1; stroke-opacity: .3; } }
   #info .meta { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); white-space: pre-line; }
   #info label { display: block; margin: 8px 0 3px; font-size: 12px; color: var(--muted); }
   #info input, #info textarea, #info select { width: 100%; padding: 6px 8px; border: 1px solid var(--edge);
@@ -328,8 +341,10 @@
       <button class="tool" id="t-new-isle">+ Nouvelle île</button>
       <button class="tool" id="t-new">+ Nouvelle zone</button>
       <button class="tool" id="t-new-pnj">+ Nouveau PNJ</button>
+      <button class="tool" id="t-new-mob">+ Nouveau monstre / boss</button>
       <button class="tool" id="t-export">Exporter zones-data.js</button>
       <button class="tool" id="t-export-pnj">Exporter pnj-data.js</button>
+      <button class="tool" id="t-export-mob">Exporter monstres-data.js</button>
       <button class="tool" id="t-import">Importer…</button>
       <button class="tool danger" id="t-reset">Abandonner le brouillon</button>
       <input type="file" id="t-file" accept=".js,.json" hidden>
@@ -360,7 +375,7 @@
     <label for="f-color">Couleur</label>
     <input id="f-color" type="color">
     <label for="f-desc">Description</label>
-    <textarea id="f-desc" maxlength="4000"></textarea>
+    <textarea id="f-desc" maxlength="4000" placeholder="Une position X,Y,monde (ex. 2424,2424,0) devient un lien vers cet endroit."></textarea>
     <div class="meta" id="f-meta"></div>
     <div class="row">
       <button class="tool" type="button" id="f-done">Terminé</button>
@@ -368,24 +383,24 @@
     </div>
   </form>
   <form id="pnj-edit" hidden onsubmit="return false">
-    <div class="type">PNJ</div>
+    <div class="type" id="p-kind">PNJ</div>
     <label for="p-name">Nom</label>
     <input id="p-name" maxlength="80">
-    <label for="p-role">Rôle</label>
+    <label for="p-role" id="p-role-l">Rôle</label>
     <select id="p-role">
       <option>Marchand</option><option>Entraîneur</option><option>Quête</option><option>Garde</option>
       <option>Prêtre</option><option>Banquier</option><option>Habitant</option>
       <option value="__other">Autre…</option>
     </select>
-    <label class="check"><input type="checkbox" id="p-move"> Se déplace</label>
+    <label class="check"><input type="checkbox" id="p-move"> <span id="p-move-l">Se déplace</span></label>
     <div id="p-move-box" hidden>
-      <label for="p-move-n">Zone de déplacement (côté en cases, centrée sur le PNJ)</label>
+      <label for="p-move-n" id="p-move-n-l">Zone de déplacement (côté en cases, centrée sur le PNJ)</label>
       <div class="inline"><input id="p-move-n" type="number" min="1" max="199" step="2" value="15"></div>
     </div>
     <label for="p-color">Couleur</label>
     <input id="p-color" type="color">
     <label for="p-desc">Description</label>
-    <textarea id="p-desc" maxlength="4000"></textarea>
+    <textarea id="p-desc" maxlength="4000" placeholder="Une position X,Y,monde (ex. 2424,2424,0) devient un lien vers cet endroit."></textarea>
     <label for="p-x">Position</label>
     <div class="pos">
       <b>X</b><input id="p-x" type="number" min="0" max="3071" step="1">
@@ -407,6 +422,13 @@
   <div id="pnj-body">
     <input class="search" id="pnj-search" type="search" placeholder="Chercher un PNJ, une île, une carte…" aria-label="Chercher un PNJ">
     <ul id="pnj" class="list pnj"></ul>
+  </div>
+</aside>
+<aside id="g-mob" class="frame">
+  <button class="side-head" id="mob-head" aria-expanded="true" aria-controls="mob-body">Monstres et boss <span class="n" id="n-mob"></span></button>
+  <div id="mob-body">
+    <input class="search" id="mob-search" type="search" placeholder="Chercher un monstre, un boss, une île…" aria-label="Chercher un monstre ou un boss">
+    <ul id="mob" class="list pnj mob"></ul>
   </div>
 </aside>
 </div>
@@ -461,7 +483,7 @@
     <button class="x" type="button" title="Fermer (Échap)" aria-label="Fermer">&times;</button>
   </header>
   <div class="body">
-    <p>Tu peux dessiner des zones et des îles, et placer des PNJ, puis nous envoyer tes ajouts.</p>
+    <p>Tu peux dessiner des zones et des îles, placer des PNJ, des monstres et des boss, puis nous envoyer tes ajouts.</p>
 
     <h3><b>1</b> Ouvrir le mode édition</h3>
     <p id="help-edit-off">Le mode édition ajoute les outils dans le menu de gauche (section <em>Édition</em>).</p>
@@ -483,6 +505,8 @@
       <li>Remplis sa fiche : nom, rôle, description. Coche <em>Se déplace</em> s'il se promène.</li>
       <li>Pour le déplacer : glisse son point, utilise <em>Déplacer…</em> ou tape X / Y.</li>
       <li>Les coordonnées X, Y sont affichées en bas de l'écran sous la souris.</li>
+      <li>Pareil pour un monstre ou un boss : <em>+ Nouveau monstre / boss</em>. Type <em>Monstres</em> = lieu
+          d'apparition (coche <em>Zone d'apparition</em> pour sa taille), type <em>Boss</em> = un boss.</li>
     </ul>
 
     <h3><b>4</b> Télécharger tes ajouts</h3>
@@ -491,13 +515,14 @@
     <ul>
       <li><em>Exporter zones-data.js</em> (zones et îles)</li>
       <li><em>Exporter pnj-data.js</em> (PNJ)</li>
+      <li><em>Exporter monstres-data.js</em> (monstres et boss)</li>
     </ul>
-    <p class="note">Les deux fichiers arrivent dans ton dossier Téléchargements.</p>
+    <p class="note">Les fichiers arrivent dans ton dossier Téléchargements.</p>
 
     <h3><b>5</b> Nous les envoyer</h3>
-    <p>Envoie les deux fichiers <em>.js</em> en pièces jointes à
+    <p>Envoie les fichiers <em>.js</em> en pièces jointes à
        <a class="mail" href="mailto:ericwebprogrammer@gmail.com">ericwebprogrammer@gmail.com</a>.</p>
-    <a class="btn" id="help-mail" href="mailto:ericwebprogrammer@gmail.com?subject=Carte%20T4C%20%E2%80%93%20ajouts%20zones%20et%20PNJ&body=Bonjour%2C%0A%0AVoici%20mes%20ajouts%20pour%20la%20carte%20(zones-data.js%20et%20pnj-data.js%20en%20pi%C3%A8ces%20jointes).%0A%0A">Écrire le courriel</a>
+    <a class="btn" id="help-mail" href="mailto:ericwebprogrammer@gmail.com?subject=Carte%20T4C%20%E2%80%93%20ajouts%20zones%20et%20PNJ&body=Bonjour%2C%0A%0AVoici%20mes%20ajouts%20pour%20la%20carte%20(zones-data.js%2C%20pnj-data.js%20et%20monstres-data.js%20en%20pi%C3%A8ces%20jointes).%0A%0A">Écrire le courriel</a>
     <button class="btn" type="button" id="help-copy">Copier l'adresse</button>
     <p class="note">Le courriel ne joint pas les fichiers tout seul : ajoute-les toi-même avant d'envoyer.</p>
   </div>
@@ -507,11 +532,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>   // donnees toujours fraiches (on les remplace a la main, sans regenerer la page)
-  for (const f of ['zones-data.js', 'pnj-data.js'])
+  for (const f of ['zones-data.js', 'pnj-data.js', 'monstres-data.js'])
     document.write('<script src="' + f + '?t=' + Date.now() + '"><\/script>');
 </script>
 <script>
-const CFG = {"maps": [{"id": "world0", "file": "v2_worldmap", "name": "Monde principal", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+f////////////f///////////////////////////////////"], "6": [24, "////////////////////////////////////////////////"], "5": [12, "////////////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869830}, {"id": "world1", "file": "v2_dungeonmap", "name": "Donjons", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/7/jIxx////3d//////38//////H///////n/8z///3zz8D//v+Y4cf/+P745wb/fv/hjxH4/P6Nn4H7//0NaMD7//DHf/wDfvPHP/gD/PPHDwAA/vPfn+AB//cP/+AB/ocP++MA/vP+/zM43+///jkY3+//nzkY//H/HzgA7+79h38A74bgx8c4BgAABwYw"], "6": [24, "///////////6//77///9//v+33se//8c//9t//9n//8Pv7xr"], "5": [12, "//////9/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869868}, {"id": "world2", "file": "v2_cavernmap", "name": "Cavernes", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "AA98/M4/4P///sf/+P///f9///P/j99//vP/379//Pf//79//vd7/t8P/Pf5//9j/vH7/7/j/vP7/3vw/vv/7/9z//3/7/9z//7/gf8Af/4AAAAAH3wIAAAAD74/AAAA/v8fgAA//v8fzgP/fj4f38P///4f/4f//vx//s//Pv//jd//Hv//nt9/nv8AHuc/"], "6": [24, "/P/7////////////3//f///f/58P9wcA/7fx//f7////////"], "5": [12, "//////8/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869911}, {"id": "world3", "file": "v2_underworld", "name": "Underworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/////////////////////////////////////////////////////////////38A//////8A//////8B//////sP//////sP///////////////////////////////////////////////////////////////////////////////////////////////+"], "6": [24, "//////////////////8f//8/////////////////////////"], "5": [12, "//////f/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791869995}, {"id": "world4", "file": "v2_leoworld", "name": "Leoworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "////fz4Q//////94//////85//////84////fz4w////fxy4////f38MAACA/38eAAAA/j8PAAAA/j8OAMAD+D8AeIAD+z8P+XCBjz8P+/CBjz8C+OCBhz8AePgBgD8AeDDhAQAAB4DhAWAA7gAAAGAA/gEAAAAA7ADAAwAA/sHDAwAATuADDwAAAEAADwAA"], "6": [24, "///v//9////n//9/APA3jvE3z7k37rkHzx0MHwAMnxkAyzEA"], "5": [12, "////2/d/f/IH"], "4": [6, "//8B"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870039}, {"id": "world5", "file": "v2_extension01", "name": "Extension 1", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/8cBAAAA/+cBAAAA//8AAAA+/z8AAMAf/z8AAPAH/h0AAPADAAAAAPADAAAAAIADAA4AAAAADh/4AeAAP37wAfgDf3/wAPwH/v8AAPgDzP8AAOAAvv8AAAAAPHMAAAAAwA8AAAAAwA8AAAAA//////////8AAAAA///9ZwAQ///9ZwAQ///9ZwDQ///9ZwDw"], "6": [24, "/wEA/wB4fwA8AAAccx4M/xw+/wAe/wAAOAAA//////9A///A"], "5": [12, "H/5gf/dw//+P"], "4": [6, "9/8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870071}, {"id": "world6", "file": "v2_extension02", "name": "Extension 2", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////sB//////8D//////8D/////78H//////8P//////8P/////z8A/////98B/////98H/////8sH/////wMAh////4MBAPj///8DAADg//8DAADg/38AAADg/38AAADg/38AABjg/38A4B/g//8H+A/g//8H8AH//38AAAD//38MAAD//38EAADg/38A"], "6": [24, "//8f//8///8///8f//8///8Z4P8fAPwPYPwPfvw/HP8vAP8v"], "5": [12, "//d//8d/72d/"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870147}, {"id": "world7", "file": "v2_extension03", "name": "Extension 3", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/v///wEA/v3//wEA/v37/wAAf3z4/AAA////HwAA//37DwAA////AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AD4AAAAAAP4AHAAAAH4APgAAAP4APwAAAP4AfwAAAD4AfgAAAAAAAAMAABwA/wcAAHwA/wIAAHwA/wMAAHgA/wMAAAAA/wAAAAAA"], "6": [24, "//8B//8A/38A/w8A/w8A/w8HBgAPBwAPDwAHPwAOHwAOHwAA"], "5": [12, "//EPPzMwB3Mw"], "4": [6, "3zUB"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1791870186}], "cellW": 32, "cellH": 16, "cursor": {"hot": [0, 0], "anim": false}, "grab": {"hot": [0, 13], "anim": true}};
+const CFG = {"maps": [{"id": "world0", "file": "v2_worldmap", "name": "Monde principal", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+f////////////f///////////////////////////////////"], "6": [24, "////////////////////////////////////////////////"], "5": [12, "////////////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467008}, {"id": "world1", "file": "v2_dungeonmap", "name": "Donjons", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/7/jIxx////3d//////38//////H///////n/8z///3zz8D//v+Y4cf/+P745wb//v/hjxH4/P4Nn4H7//kNaMD7//DHf/wDfvPHP/gD/PPHDwAA/vPfzuAB//cP/+AB3ocP++MA/vP//zM43+///jkY3+//nzkY//H/HzgA/+71h8cA/4bgx8c4BgAABwYw"], "6": [24, "///////////6//77///9//v+33se//8c//9t//9n//8Pv7xr"], "5": [12, "//////9/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467049}, {"id": "world2", "file": "v2_cavernmap", "name": "Cavernes", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "AA98/M4/4P///sf/+P///f9///P/j99//vP/379//Pf//79//vd7/t8P/Pf5//9j/vH7/7/j/vP7/3vw/vv/7/9z//3/7/9z//7/gf8Af/4AAAAAH3wIAAAAD74/AAAA/v8fgAA//v8fzgP/fj4f38P///4f/4f//vx//s//Pv//jd//Hv//nt9/nv8AHuc/"], "6": [24, "/P/7////////////3//f///f/58P9wcA/7fx//f7////////"], "5": [12, "//////8/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467095}, {"id": "world3", "file": "v2_underworld", "name": "Underworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/////////////////////////////////////////////////////////////38A//////8A//////8B//////sP//////sP///////////////////////////////////////////////////////////////////////////////////////////////+"], "6": [24, "//////////////////8f//8/////////////////////////"], "5": [12, "//////f/////"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467186}, {"id": "world4", "file": "v2_leoworld", "name": "Leoworld", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "////fz4Q//////94//////85//////84////fz4w////fxy4////f38MAACA/38eAAAA/j8PAAAA/j8OAMAD+D8AeIAD+z8P+XCBjz8P+/CBjz8C+OCBhz8AePgBgD8AeDDhAQAAB4DhAWAA7gAAAGAA/gEAAAAA7ADAAwAA/sHDAwAATuADDwAAAEAADwAA"], "6": [24, "///v//9////n//9/APA3jvE3z7k37rkHzx0MHwAMnxkAyzEA"], "5": [12, "////2/d/f/IH"], "4": [6, "//8B"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467584}, {"id": "world5", "file": "v2_extension01", "name": "Extension 1", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/8cBAAAA/+cBAAAA//8AAAA+/z8AAMAf/z8AAPAH/h0AAPADAAAAAPADAAAAAIADAA4AAAAADh/4AeAAP37wAfgDf3/wAPwH/v8AAPgDzP8AAOAAvv8AAAAAPHMAAAAAwA8AAAAAwA8AAAAA//////////8AAAAA///9ZwAQ///9ZwAQ///9ZwDQ///9ZwDw"], "6": [24, "/wEA/wB4fwA8AAAccx4M/xw+/wAe/wAAOAAA//////9A///A"], "5": [12, "H/5gf/dw//+P"], "4": [6, "9/8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467618}, {"id": "world6", "file": "v2_extension02", "name": "Extension 2", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "//////sB//////8D//////8D/////78H//////8P//////8P/////z8A/////98B/////98H/////8sH/////wMAh////4MBAPj///8DAADg//8DAADg/38AAADg/38AAADg/38AABjg/38A4B/g//8H+A/g//8H8AH//38AAAD//38MAAD//38EAADg/38A"], "6": [24, "//8f//8///8///8f//8///8Z4P8fAPwPYPwPfvw/HP8vAP8v"], "5": [12, "//d//8d/72d/"], "4": [6, "//8D"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467698}, {"id": "world7", "file": "v2_extension03", "name": "Extension 3", "width": 24576, "height": 12288, "tile": 512, "maxZoom": 7, "ext": "avif", "have": {"7": [48, "/v///wEA/v3//wEA/v37/wAAf3z4/AAA////HwAA//37DwAA////AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AAAA/v9/AD4AAAAAAP4AHAAAAH4APgAAAP4APwAAAP4AfwAAAD4AfgAAAAAAAAMAABwA/wcAAHwA/wIAAHwA/wMAAHgA/wMAAAAA/wAAAAAA"], "6": [24, "//8B//8A/38A/w8A/w8A/w8HBgAPBwAPDwAHPwAOHwAOHwAA"], "5": [12, "//EPPzMwB3Mw"], "4": [6, "3zUB"], "3": [3, "Pw=="], "2": [2, "Aw=="], "1": [1, "AQ=="], "0": [1, "AQ=="]}, "scale": 0.25, "v": 1792467740}], "cellW": 32, "cellH": 16, "cursor": {"hot": [0, 0], "anim": false}, "grab": {"hot": [0, 13], "anim": true}};
 const byId = Object.fromEntries(CFG.maps.map(m => [m.id, m]));
 
 const map = L.map('map', { crs: L.CRS.Simple, minZoom: 0, zoomSnap: 0.5,
@@ -649,6 +674,9 @@ if (CFG.grab && CFG.grab.anim) {
 //   type "Île" = ile : contour leger, listee sous sa carte ; les zones et PNJ dedans lui appartiennent
 // pnj-data.js   -> window.PNJ   = [{id, map, x, y, name, role, desc, color?, move?}]   (x, y = case du jeu)
 //   move = cote du carre de deplacement en cases (15 = 15x15 centre sur x, y) ; absent = PNJ fixe
+// monstres-data.js -> window.MONSTRES = [{id, map, x, y, name, role, desc, color?, move?, cat: 'mob'}]
+//   role "Monstres" = lieu d'apparition (move = cote de la zone d'apparition), role "Boss" = un boss
+//   En memoire, PNJ et monstres sont dans la meme liste (pnjs) : cat === 'mob' les distingue
 // Edition : ouvrir index.html?edit (brouillon dans le navigateur, puis Exporter)
 const EDIT = new URLSearchParams(location.search).has('edit');
 const clone = a => JSON.parse(JSON.stringify(a || []));
@@ -661,8 +689,13 @@ function loadDraft(key, fallback) {
 }
 let [zones, draftZ] = loadDraft('t4c-zones-draft', window.ZONES);
 let [pnjs, draftP] = loadDraft('t4c-pnj-draft', window.PNJ);
+let [mobs0, draftM] = loadDraft('t4c-mob-draft', window.MONSTRES);
+const isMob = p => p.cat === 'mob';
+const asMobs = a => (a || []).map(p => Object.assign(p, { cat: 'mob' }));
+pnjs = pnjs.filter(p => !isMob(p)).concat(asMobs(mobs0));
 
 map.createPane('isles').style.zIndex = 390;   // sous les zones : un clic dans une ville choisit la ville
+const mobAreaLayer = L.layerGroup().addTo(map);   // zones d'apparition des monstres, toujours visibles
 const zoneLayer = L.layerGroup().addTo(map), pnjLayer = L.layerGroup().addTo(map),
       handleLayer = L.layerGroup().addTo(map), rangeLayer = L.layerGroup().addTo(map);
 const shapes = new Map(), pins = new Map(), isleLabels = new Map();   // id -> polygone / marqueur / nom d'ile
@@ -677,13 +710,13 @@ function toCorner(m, ll) {
 const byName = (a, b) => (a.name || '').localeCompare(b.name || '', 'fr');
 
 // Sections repliables : etat memorise
-{   // PNJ (colonne de droite) : replie / deplie
-  const g = F('g-pnj'), h = F('pnj-head');
+for (const k of ['pnj', 'mob']) {   // PNJ, Monstres et boss (colonne de droite) : replie / deplie
+  const g = F('g-' + k), h = F(k + '-head');
   const set = open => { g.classList.toggle('closed', !open); h.setAttribute('aria-expanded', open); };
   const phone = matchMedia('(max-width: 640px)').matches;   // replie par defaut sur telephone
-  try { const v = localStorage.getItem('g-pnj'); set(v === null ? !phone : v !== '0'); } catch (e) { set(!phone); }
+  try { const v = localStorage.getItem('g-' + k); set(v === null ? !phone : v !== '0'); } catch (e) { set(!phone); }
   h.onclick = () => { const open = g.classList.contains('closed'); set(open);
-                      try { localStorage.setItem('g-pnj', open ? '1' : '0'); } catch (e) {} };
+                      try { localStorage.setItem('g-' + k, open ? '1' : '0'); } catch (e) {} };
 }
 for (const id of ['g-zones']) {
   const d = F(id);
@@ -837,7 +870,11 @@ function renderIsleMenu() {
 
 // ---------------------------------------------------------------- PNJ
 const ROLE_COLORS = { 'Marchand': '#e0b24a', 'Entraîneur': '#5aa0e6', 'Quête': '#f0e05a', 'Garde': '#b9b9b9',
-                      'Prêtre': '#f4f4f4', 'Banquier': '#4fc38a', 'Habitant': '#c8a27a' };
+                      'Prêtre': '#f4f4f4', 'Banquier': '#4fc38a', 'Habitant': '#c8a27a',
+                      'Monstres': '#e0823a', 'Boss': '#e8463c' };
+const PNJ_ROLES = ['Marchand', 'Entraîneur', 'Quête', 'Garde', 'Prêtre', 'Banquier', 'Habitant'];
+const MOB_ROLES = ['Monstres', 'Boss'];
+const isBoss = p => isMob(p) && p.role === 'Boss';
 function roleColor(r) {
   if (ROLE_COLORS[r]) return ROLE_COLORS[r];
   let h = 0; for (const c of r || '') h = (h * 31 + c.charCodeAt(0)) % 360;
@@ -848,8 +885,10 @@ const LABEL_ZOOM = () => cur.maxZoom;   // noms permanents a partir de ce zoom
 let pnjLabelsOn = null;
 
 function pnjIcon(p) {
-  const sz = (map.getZoom() >= cur.maxZoom - 2 ? 14 : 10) + (p.move ? 4 : 0);   // un peu plus grand : botte lisible
-  return L.divIcon({ className: 'pnj-icon' + (selP === p ? ' sel' : '') + (p.move ? ' moving' : ''), iconSize: [sz, sz],
+  const mob = isMob(p), boss = isBoss(p);
+  const sz = (map.getZoom() >= cur.maxZoom - 2 ? 14 : 10) + (p.move && !mob ? 4 : 0) + (boss ? 6 : 0);   // botte / crane lisibles
+  return L.divIcon({ className: 'pnj-icon' + (selP === p ? ' sel' : '') + (p.move && !mob ? ' moving' : '')
+                                + (mob ? ' mob' : '') + (boss ? ' boss' : ''), iconSize: [sz, sz],
                      html: '<span style="--c:' + pnjColor(p) + '"></span>' });
 }
 // Carre de deplacement (move x move cases autour du PNJ), affiche au survol et a la selection
@@ -861,9 +900,18 @@ function showRange(p) {
   L.rectangle([corner(cur, p.x - h, p.y - h), corner(cur, p.x - h + p.move, p.y - h + p.move)],
               { color: c, weight: 1.5, dashArray: '6 4', fillColor: c, fillOpacity: .1, interactive: false }).addTo(rangeLayer);
 }
-const moveTxt = p => 'Se déplace : zone ' + p.move + '×' + p.move + ' cases';
+const moveTxt = p => (isMob(p) ? 'Zone d’apparition : ' : 'Se déplace : zone ') + p.move + '×' + p.move + ' cases';
+function renderMobAreas() {   // ou apparaissent les monstres : carre leger, toujours affiche
+  mobAreaLayer.clearLayers();
+  for (const p of pnjs) {
+    if (!isMob(p) || !p.move || p.map !== cur.id) continue;
+    const h = Math.floor(p.move / 2), c = pnjColor(p);
+    L.rectangle([corner(cur, p.x - h, p.y - h), corner(cur, p.x - h + p.move, p.y - h + p.move)],
+                { color: c, weight: 1.5, opacity: .9, dashArray: '4 4', fillColor: c, fillOpacity: .14, interactive: false }).addTo(mobAreaLayer);
+  }
+}
 function renderPnj() {
-  pnjLayer.clearLayers(); pins.clear();
+  pnjLayer.clearLayers(); pins.clear(); renderMobAreas();
   if (selP && selP.map !== cur.id) closeInfo();
   pnjLabelsOn = map.getZoom() >= LABEL_ZOOM();
   for (const p of pnjs) {
@@ -878,9 +926,10 @@ function renderPnj() {
     m.on('mouseout', () => showRange(selP));
     if (EDIT) m.on('dragend', () => {
       const g = toGame(cur, m.getLatLng());
-      if (g) movePnj(p, g.x, g.y); else m.setLatLng(fromGame(cur, p.x, p.y));
+      if (g) { movePnj(p, g.x, g.y); renderMobAreas(); } else m.setLatLng(fromGame(cur, p.x, p.y));
     });
     m.addTo(pnjLayer);
+    if (isBoss(p)) m.setZIndexOffset(500);   // boss au-dessus des autres points
     pins.set(p.id, m);
   }
   showRange(selP);
@@ -899,18 +948,21 @@ function goPnj(p) {   // un PNJ d'une autre carte : on change de carte d'abord
   if (p.map !== cur.id && byId[p.map]) show(p.map, { x: p.x, y: p.y, z: Math.max(map.getZoom(), byId[p.map].maxZoom) });
   selectPnj(p, true);
 }
-function renderPnjList() {
-  const ul = F('pnj'); ul.innerHTML = '';
-  const q = F('pnj-search').value.trim().toLowerCase();
-  const items = pnjs.map(p => ({ p, place: pnjPlace(p) }));
+function renderPnjList() { renderList('pnj'); renderList('mob'); }
+function renderList(k) {   // k = 'pnj' (PNJ) ou 'mob' (Monstres et boss)
+  const ul = F(k); ul.innerHTML = '';
+  const q = F(k + '-search').value.trim().toLowerCase();
+  const all = pnjs.filter(p => isMob(p) === (k === 'mob'));
+  const items = all.map(p => ({ p, place: pnjPlace(p) }));
   const shown = items.filter(({ p, place }) => !q || (p.name + ' ' + (p.role || '') + ' ' + (p.desc || '') + ' ' + place).toLowerCase().includes(q))
-                     .sort((a, b) => byName(a.p, b.p));
-  F('g-pnj').hidden = !pnjs.length && !EDIT;
-  F('n-pnj').textContent = pnjs.length || '';
-  F('pnj-search').hidden = pnjs.length < 8;
-  if (!shown.length) ul.innerHTML = '<li class="empty">' + (pnjs.length ? 'Aucun résultat' : 'Aucun PNJ') + '</li>';
+                     .sort((a, b) => isBoss(b.p) - isBoss(a.p) || byName(a.p, b.p));   // boss en tete
+  F('g-' + k).hidden = !all.length && !EDIT;
+  F('n-' + k).textContent = all.length || '';
+  F(k + '-search').hidden = all.length < 8;
+  if (!shown.length) ul.innerHTML = '<li class="empty">' + (all.length ? 'Aucun résultat' : k === 'mob' ? 'Aucun monstre ni boss' : 'Aucun PNJ') + '</li>';
   for (const { p, place } of shown) {
-    const li = listButton(p.name || '(sans nom)', (p.move ? '👢 ' : '') + place, pnjColor(p), selP === p, () => goPnj(p));
+    const tag = k === 'mob' ? (isBoss(p) ? '💀 ' : '') : p.move ? '👢 ' : '';
+    const li = listButton(p.name || '(sans nom)', tag + place, pnjColor(p), selP === p, () => goPnj(p));
     if (p.map !== cur.id) li.firstChild.classList.add('away');
     li.firstChild.title = (p.role ? p.role + ' · ' : '') + (byId[p.map] || {}).name + ' · ' + p.x + ', ' + p.y;
     ul.appendChild(li);
@@ -918,7 +970,8 @@ function renderPnjList() {
   const on = ul.querySelector('[aria-current="true"]');
   if (on) on.scrollIntoView({ block: 'nearest' });
 }
-F('pnj-search').addEventListener('input', renderPnjList);
+F('pnj-search').addEventListener('input', () => renderList('pnj'));
+F('mob-search').addEventListener('input', () => renderList('mob'));
 
 // ---------------------------------------------------------------- Fiche
 const info = F('info'), vView = F('info-view');
@@ -929,8 +982,9 @@ function zoneMeta(z) {
           ' · ' + (x1 - x0) + '×' + (y1 - y0) + ' cases';
   if (isIsle(z)) {
     const nz = zones.filter(o => o.map === z.map && zoneIsle(o) === z).length;
-    const np = pnjs.filter(p => p.map === z.map && inPoly(p.x + .5, p.y + .5, z.points)).length;
-    s += '\n' + nz + ' zone' + (nz > 1 ? 's' : '') + ' · ' + np + ' PNJ';
+    const inside = pnjs.filter(p => p.map === z.map && inPoly(p.x + .5, p.y + .5, z.points));
+    const nm = inside.filter(isMob).length, np = inside.length - nm;
+    s += '\n' + nz + ' zone' + (nz > 1 ? 's' : '') + ' · ' + np + ' PNJ' + (nm ? ' · ' + nm + ' monstre' + (nm > 1 ? 's' : '') + ' / boss' : '');
   } else { const i = zoneIsle(z); if (i) s = 'Île : ' + (i.name || '?') + '\n' + s; }
   return s;
 }
@@ -944,13 +998,40 @@ function openCard(form) {   // form = 'info-edit' | 'pnj-edit' | null (lecture)
   F('info-edit').hidden = form !== 'info-edit';
   F('pnj-edit').hidden = form !== 'pnj-edit';
 }
+// "2424,2424,0" -> { m, x, y } si la case existe (sans monde : carte affichee)
+function coordOf(s) {
+  const n = s.match(/\d+/g).map(Number);
+  const m = n.length >= 3 ? byId['world' + n[2]] : cur;
+  if (!m || n[0] * CFG.cellW * m.scale >= m.width || n[1] * CFG.cellH * m.scale >= m.height) return null;
+  return { m, x: n[0], y: n[1] };
+}
+let coordPing = null, coordKeep = false;
+function coordGo({ m, x, y }) {
+  const z = Math.max(map.getZoom(), m.maxZoom - 1);
+  // autre carte : la fiche reste ouverte (lecture) pour pouvoir suivre les autres positions
+  if (m.id !== cur.id) { coordKeep = true; try { show(m.id, { x, y, z }); } finally { coordKeep = false; } }
+  else map.setView(fromGame(m, x, y), z);
+  if (coordPing) map.removeLayer(coordPing);
+  const p = coordPing = L.circleMarker(fromGame(m, x, y), {
+    radius: 16, color: '#2fb79c', weight: 3, fillOpacity: .15, className: 'coord-ping', interactive: false
+  }).addTo(map);
+  setTimeout(() => { if (coordPing === p) { map.removeLayer(p); coordPing = null; } }, 6000);
+  if (window.innerWidth < 700) panel.classList.remove('open');
+}
 function fillView(type, name, desc, meta) {
   vView.querySelector('.type').textContent = type || '';
   vView.querySelector('h2').textContent = name || '';
-  // texte brut ; les liens http(s) deviennent cliquables (pas de HTML injecte)
+  // texte brut ; les liens http(s) et les positions "X,Y" ou "X,Y,monde" deviennent cliquables (pas de HTML injecte)
   const d = vView.querySelector('.desc'); d.textContent = '';
-  (desc || '').split(/(https?:\/\/[^\s<>"]+)/).forEach((part, i) => {
-    if (i % 2) {
+  (desc || '').split(/(https?:\/\/[^\s<>"]+|\b\d{1,5} ?, ?\d{1,5}(?: ?, ?\d{1,2})?\b)/).forEach((part, i) => {
+    const pos = i % 2 && !/^http/.test(part) && coordOf(part);
+    if (pos) {
+      const a = document.createElement('a');
+      a.href = '#'; a.className = 'coord'; a.textContent = part;
+      a.title = 'Voir ' + pos.x + ', ' + pos.y + ' — ' + pos.m.name;
+      a.onclick = e => { e.preventDefault(); coordGo(pos); };
+      d.appendChild(a);
+    } else if (i % 2 && /^http/.test(part)) {
       const a = document.createElement('a');
       a.href = part; a.textContent = part; a.target = '_blank'; a.rel = 'noopener';
       d.appendChild(a);
@@ -978,7 +1059,8 @@ function selectPnj(p, fly) {
   selP = p; refreshPin(old); refreshPin(p); renderPnjList();
   openCard(EDIT ? 'pnj-edit' : null);
   if (EDIT) {
-    F('p-name').value = p.name || ''; setOpt(F('p-role'), p.role || 'Habitant');
+    formKind(isMob(p));
+    F('p-name').value = p.name || ''; setOpt(F('p-role'), p.role || (isMob(p) ? 'Monstres' : 'Habitant'));
     F('p-desc').value = p.desc || ''; F('p-meta').textContent = pnjMeta(p);
     F('p-color').value = /^#[0-9a-f]{6}$/i.test(pnjColor(p)) ? pnjColor(p) : '#d4b06a';
     F('p-x').value = p.x; F('p-y').value = p.y; F('p-map').value = p.map;
@@ -987,6 +1069,19 @@ function selectPnj(p, fly) {
   } else fillView(p.role, p.name, p.desc, pnjMeta(p));
   showRange(p);
   if (fly) map.setView(fromGame(cur, p.x, p.y), Math.max(map.getZoom(), cur.maxZoom));
+}
+let formMob = null;
+function formKind(mob) {   // meme formulaire pour un PNJ et un monstre : libelles et choix de type
+  if (formMob === mob) return;
+  formMob = mob;
+  F('p-kind').textContent = mob ? 'Monstre / boss' : 'PNJ';
+  F('p-role-l').textContent = mob ? 'Type' : 'Rôle';
+  F('p-move-l').textContent = mob ? 'Zone d’apparition' : 'Se déplace';
+  F('p-move-n-l').textContent = mob ? 'Zone d’apparition (côté en cases, centrée sur le point)'
+                                    : 'Zone de déplacement (côté en cases, centrée sur le PNJ)';
+  const sel = F('p-role'); sel.innerHTML = '';
+  for (const r of mob ? MOB_ROLES : PNJ_ROLES) { const o = document.createElement('option'); o.textContent = r; sel.appendChild(o); }
+  const o = document.createElement('option'); o.value = '__other'; o.textContent = 'Autre…'; sel.appendChild(o);
 }
 function setOpt(sel, t) {   // ajoute les valeurs libres deja utilisees a la liste
   if (![...sel.options].some(o => o.value === t)) {
@@ -998,7 +1093,7 @@ function setOpt(sel, t) {   // ajoute les valeurs libres deja utilisees a la lis
 function closeInfo() {
   const old = selP;
   if (placing && placing !== true) stopPlacing();
-  selected = null; selP = null; info.hidden = true; handleLayer.clearLayers(); rangeLayer.clearLayers();
+  selected = null; selP = null; info.hidden = !coordKeep; handleLayer.clearLayers(); rangeLayer.clearLayers();
   restyle(); refreshPin(old); renderZoneList(); renderPnjList();
 }
 info.querySelector('.close').onclick = closeInfo;
@@ -1006,7 +1101,11 @@ info.querySelector('.close').onclick = closeInfo;
 // ---------------------------------------------------------------- Edition
 function saveDraft(kind) {
   try {
-    if (kind === 'pnj') { draftP = true; localStorage.setItem('t4c-pnj-draft', JSON.stringify(pnjs)); }
+    if (kind === 'pnj') {   // PNJ et monstres : chacun son brouillon, seulement s'il a change
+      const pj = JSON.stringify(pnjs.filter(p => !isMob(p))), mj = JSON.stringify(pnjs.filter(isMob));
+      if (draftP || pj !== JSON.stringify(window.PNJ || [])) { draftP = true; localStorage.setItem('t4c-pnj-draft', pj); }
+      if (draftM || mj !== JSON.stringify(asMobs(clone(window.MONSTRES)))) { draftM = true; localStorage.setItem('t4c-mob-draft', mj); }
+    }
     else { draftZ = true; localStorage.setItem('t4c-zones-draft', JSON.stringify(zones)); }
   } catch (e) {}
   editStatus();
@@ -1014,7 +1113,9 @@ function saveDraft(kind) {
 function editStatus(msg) {
   if (!EDIT) return;
   const part = (n, what, d) => n + ' ' + what + (d ? ' (brouillon non exporté)' : '');
-  F('edit-status').textContent = msg || part(zones.length, 'zones', draftZ) + ' · ' + part(pnjs.length, 'PNJ', draftP);
+  const nm = pnjs.filter(isMob).length;
+  F('edit-status').textContent = msg || part(zones.length, 'zones', draftZ) + ' · ' + part(pnjs.length - nm, 'PNJ', draftP)
+                                      + ' · ' + part(nm, 'monstres / boss', draftM);
 }
 
 // Poignees : sommets deplacables (clic droit = supprimer), milieux = ajouter un point
@@ -1085,22 +1186,23 @@ function finishDraw() {
 
 // Placement d'un PNJ : le prochain clic sur la carte le pose
 // (placing = true : nouveau PNJ ; placing = un PNJ : le deplacer)
-function startPlacing(target) {
+let placingMob = false;   // nouveau point : monstre / boss (sinon PNJ)
+function startPlacing(target, mob) {
   if (draw) endDraw();
   if (!target) closeInfo();
-  placing = target || true;
+  placing = target || true; placingMob = !target && !!mob;
   map.getContainer().classList.add('drawing');
   F('p-pick').classList.toggle('on', !!target);
   F('p-pick').textContent = target ? 'Annuler' : 'Déplacer…';
   F('p-pick-hint').hidden = !target;
   // apercu du PNJ sous la souris (+ trait depuis sa place actuelle)
-  const look = target === true || !target ? { color: '#e8dcc0' } : target;
+  const look = target === true || !target ? { color: mob ? ROLE_COLORS.Monstres : '#e8dcc0' } : target;
   ghost = { mark: L.marker([0, 0], { icon: L.divIcon({ className: 'pnj-icon ghost', iconSize: [14, 14],
                                                         html: '<span style="--c:' + pnjColor(look) + '"></span>' }),
                                      interactive: false, keyboard: false }),
             line: target && target !== true ? L.polyline([], { color: '#fff', weight: 1.5, dashArray: '4 4', interactive: false }) : null };
   editStatus(target ? 'Clique sur la carte pour déplacer « ' + (target.name || 'PNJ') + ' » · Échap : annuler'
-                    : 'Clique sur la carte pour poser le PNJ · Échap : annuler');
+                    : 'Clique sur la carte pour poser le ' + (mob ? 'monstre / boss' : 'PNJ') + ' · Échap : annuler');
 }
 function stopPlacing() {
   if (!placing) return;
@@ -1131,9 +1233,11 @@ map.on('click', e => {
     const g = toGame(cur, e.latlng), target = placing;
     stopPlacing();
     if (!g) return;
-    if (target !== true) { movePnj(target, g.x, g.y); return; }
-    const p = { id: 'p' + Date.now().toString(36), map: cur.id, x: g.x, y: g.y,
-                name: 'Nouveau PNJ', role: 'Habitant', desc: '' };
+    if (target !== true) { movePnj(target, g.x, g.y); renderMobAreas(); return; }
+    const p = placingMob ? { id: 'm' + Date.now().toString(36), map: cur.id, x: g.x, y: g.y,
+                             name: 'Nouveau monstre', role: 'Monstres', desc: '', move: MOVE_DEFAULT, cat: 'mob' }
+                         : { id: 'p' + Date.now().toString(36), map: cur.id, x: g.x, y: g.y,
+                             name: 'Nouveau PNJ', role: 'Habitant', desc: '' };
     pnjs.push(p); saveDraft('pnj'); renderPnj(); selectPnj(p);
     F('p-name').select(); F('p-name').focus();
     return;
@@ -1206,13 +1310,13 @@ if (EDIT) {
   };
   // PNJ
   bindChoice(F('p-role'), () => selP, 'role');
-  F('p-role').addEventListener('change', () => { if (selP) { saveDraft('pnj'); refreshPin(selP); renderPnjList(); } });
+  F('p-role').addEventListener('change', () => { if (selP) { saveDraft('pnj'); renderPnj(); } });   // boss <-> monstres : autre point
   for (const [id, key] of [['p-name', 'name'], ['p-desc', 'desc'], ['p-color', 'color']]) {
     F(id).addEventListener('input', () => {
       if (!selP) return;
       selP[key] = F(id).value; saveDraft('pnj');
       if (key === 'name') { const m = pins.get(selP.id); if (m) m.setTooltipContent(selP.name || '(sans nom)'); renderPnjList(); }
-      if (key === 'color') { refreshPin(selP); renderPnjList(); }
+      if (key === 'color') { refreshPin(selP); renderPnjList(); renderMobAreas(); }
     });
   }
   // Deplacement : case a cocher + taille du carre (15x15 par defaut)
@@ -1221,7 +1325,7 @@ if (EDIT) {
     const n = Math.max(1, Math.min(199, Math.round(+F('p-move-n').value) || MOVE_DEFAULT));
     if (F('p-move').checked) selP.move = n; else delete selP.move;
     F('p-move-box').hidden = !selP.move;
-    saveDraft('pnj'); refreshPin(selP); showRange(selP); renderPnjList();
+    saveDraft('pnj'); refreshPin(selP); showRange(selP); renderPnjList(); renderMobAreas();
     F('p-meta').textContent = pnjMeta(selP);
   };
   F('p-move').addEventListener('change', moveChanged);
@@ -1229,7 +1333,7 @@ if (EDIT) {
   // Position : X / Y, clic sur la carte, carte (monde)
   for (const id of ['p-x', 'p-y']) F(id).addEventListener('input', () => {
     if (!selP || F(id).value === '') return;
-    movePnj(selP, +F('p-x').value, +F('p-y').value);
+    movePnj(selP, +F('p-x').value, +F('p-y').value); renderMobAreas();
     const m = pins.get(selP.id);
     if (m && !map.getBounds().contains(m.getLatLng())) map.panTo(m.getLatLng());
   });
@@ -1244,33 +1348,38 @@ if (EDIT) {
   });
   F('p-done').onclick = closeInfo;
   F('p-del').onclick = () => {
-    if (!selP || !confirm('Supprimer « ' + (selP.name || 'PNJ') + ' » ?')) return;
+    if (!selP || !confirm('Supprimer « ' + (selP.name || (isMob(selP) ? 'monstre' : 'PNJ')) + ' » ?')) return;
     pnjs = pnjs.filter(p => p !== selP); closeInfo(); saveDraft('pnj'); renderPnj();
   };
   // Outils
   F('t-new').onclick = () => startDraw(false);
   F('t-new-isle').onclick = () => startDraw(true);
   F('t-new-pnj').onclick = () => startPlacing();
+  F('t-new-mob').onclick = () => startPlacing(null, true);
   F('t-export').onclick = () => download('zones-data.js', 'ZONES', zones);
-  F('t-export-pnj').onclick = () => download('pnj-data.js', 'PNJ', pnjs);
+  F('t-export-pnj').onclick = () => download('pnj-data.js', 'PNJ', pnjs.filter(p => !isMob(p)));
+  F('t-export-mob').onclick = () => download('monstres-data.js', 'MONSTRES', pnjs.filter(isMob));
   F('t-import').onclick = () => F('t-file').click();
   F('t-file').onchange = async () => {
     const f = F('t-file').files[0]; if (!f) return;
-    try {   // zones-data.js / pnj-data.js / .json : on garde le tableau [...]
+    try {   // zones-data.js / pnj-data.js / monstres-data.js / .json : on garde le tableau [...]
       const txt = await f.text();
       const d = JSON.parse(txt.slice(txt.indexOf('['), txt.lastIndexOf(']') + 1));
       if (!Array.isArray(d)) throw new Error('pas une liste');
-      const isPnj = /window\.PNJ\b/.test(txt) || (d.length && 'x' in d[0] && !('points' in d[0]));
+      const isMobs = /window\.MONSTRES\b/.test(txt) || (d.length && d[0].cat === 'mob');
+      const isPnj = !isMobs && (/window\.PNJ\b/.test(txt) || (d.length && 'x' in d[0] && !('points' in d[0])));
       closeInfo();
-      if (isPnj) { pnjs = d; saveDraft('pnj'); } else { zones = d; saveDraft(); }
+      if (isMobs) { pnjs = pnjs.filter(p => !isMob(p)).concat(asMobs(d)); saveDraft('pnj'); }
+      else if (isPnj) { pnjs = d.filter(p => !isMob(p)).concat(pnjs.filter(isMob)); saveDraft('pnj'); }
+      else { zones = d; saveDraft(); }
       renderAll();
     } catch (err) { editStatus('Import impossible : ' + err.message); }
     F('t-file').value = '';
   };
   F('t-reset').onclick = () => {
-    if (!confirm('Revenir au contenu de zones-data.js et pnj-data.js ? Les modifications non exportées seront perdues.')) return;
-    try { localStorage.removeItem('t4c-zones-draft'); localStorage.removeItem('t4c-pnj-draft'); } catch (e) {}
-    zones = clone(window.ZONES); pnjs = clone(window.PNJ); draftZ = draftP = false;
+    if (!confirm('Revenir au contenu de zones-data.js, pnj-data.js et monstres-data.js ? Les modifications non exportées seront perdues.')) return;
+    try { for (const k of ['t4c-zones-draft', 't4c-pnj-draft', 't4c-mob-draft']) localStorage.removeItem(k); } catch (e) {}
+    zones = clone(window.ZONES); pnjs = clone(window.PNJ).concat(asMobs(clone(window.MONSTRES))); draftZ = draftP = draftM = false;
     closeInfo(); renderAll(); editStatus();
   };
 }

@@ -2712,7 +2712,7 @@ window.PNJ = [
   "y": 1260,
   "name": "Gertruda",
   "role": "",
-  "desc": "Tâches Invasion",
+  "desc": "Tâches Invasion - Accessible depuis 1157,2008,0",
   "color": "#d92697"
  },
  {
