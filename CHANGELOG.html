@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>T4C — Changelog (since the Unequip button)</title>
+<style>
+  :root{
+    --bg:#14110c; --panel:#1d1812; --panel2:#241d15; --line:#3a2f1e;
+    --gold:#e8c46a; --gold2:#b9933f; --txt:#e7ddc8; --dim:#a99e85;
+    --srv:#7fb2ff; --cli:#7ad6a0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#100d09,#181309);color:var(--txt);
+       font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:40px 22px 80px}
+  header.top{text-align:center;margin-bottom:34px}
+  header.top h1{font-family:Georgia,serif;color:var(--gold);font-size:34px;margin:0 0 8px;
+       text-shadow:0 0 18px rgba(232,196,106,.25)}
+  header.top .sub{color:var(--dim);letter-spacing:3px;text-transform:uppercase;font-size:12px}
+  header.top .range{margin-top:14px;color:var(--gold2);font-size:13px}
+  .note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold2);
+       border-radius:8px;padding:12px 16px;margin:18px 0 30px;color:var(--dim);font-size:13.5px}
+
+  .cols{display:grid;grid-template-columns:1fr;gap:26px}
+  @media(min-width:920px){.cols{grid-template-columns:1fr 1fr}}
+
+  .side{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .side > h2{margin:0;padding:16px 20px;font-size:18px;letter-spacing:1px;
+       display:flex;align-items:center;gap:10px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .side > h2 .tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:1px}
+  .side.cli > h2 .tag{background:rgba(122,214,160,.15);color:var(--cli);border:1px solid rgba(122,214,160,.4)}
+  .side.srv > h2 .tag{background:rgba(127,178,255,.15);color:var(--srv);border:1px solid rgba(127,178,255,.4)}
+  .side .body{padding:8px 20px 22px}
+
+  .grp{margin-top:20px}
+  .grp h3{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);
+       margin:0 0 10px;padding-bottom:6px;border-bottom:1px dashed var(--line)}
+  ul.changes{list-style:none;margin:0;padding:0}
+  ul.changes li{position:relative;padding:7px 0 7px 22px;border-bottom:1px solid rgba(58,47,30,.45);
+       font-size:14px}
+  ul.changes li:last-child{border-bottom:none}
+  ul.changes li::before{content:"";position:absolute;left:4px;top:14px;width:7px;height:7px;
+       border-radius:50%;background:var(--gold2)}
+  .side.cli ul.changes li::before{background:var(--cli)}
+  .side.srv ul.changes li::before{background:var(--srv)}
+  ul.changes li b{color:var(--gold)}
+  ul.changes li .d{color:var(--dim);font-size:13px}
+  footer{margin-top:40px;text-align:center;color:var(--dim);font-size:12px}
+  .legend{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--dim)}
+  .dot{width:9px;height:9px;border-radius:50%}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>The 4th Coming — Changelog</h1>
+  </header>
+
+  <div class="note">
+    This changelog summarises every change made split between the
+    <b>Client</b> and the <b>Server</b>.
+  </div>
+
+  <div class="cols">
+
+    <!-- ============================ CLIENT ============================ -->
+    <section class="side cli">
+      <h2><span class="tag">CLIENT</span> Game client</h2>
+      <div class="body">
+
+        <div class="grp">
+          <h3>Rendering &amp; graphics</h3>
+          <ul class="changes">
+            <li><b>Direct3D&nbsp;11 backend</b> — <span class="d">Migrated the renderer from DirectDraw to Direct3D&nbsp;11 behind a new <code>IRenderer</code> abstraction (DDraw7 kept as fallback).</span></li>
+            <li><b>DirectDraw removed for good</b> — <span class="d">D3D11 is now the one and only backend (no more <code>d3d11on.txt</code> marker, no DDraw fallback). Sprite pixels live in plain system-memory surfaces (<code>SoftSurface</code>: software blits with colour-key, mirror, stretch, GDI text); <code>ddraw.dll</code> is no longer imported by the executable.</span></li>
+            <li><b>World lighting on the GPU</b> — <span class="d">The per-pixel lighting multiply (world × lightmap) and the full-screen 565→RGBA conversion moved from the CPU to a pixel shader — bit-exact same output, including the “full-bright” low-light mode. Render-thread CPU cut by ~55%.</span></li>
+            <li><b>D3D11 sprite features</b> — <span class="d">Horizontal mirroring and global per-vertex semi-transparency on the GPU path.</span></li>
+            <li><b>x64 build</b> — <span class="d">The client now builds and runs as a 64-bit application.</span></li>
+            <li><b>1080p edge culling fix</b> — <span class="d">NPCs, objects and lights at the screen edges are no longer wrongly culled at 1080p.</span></li>
+            <li><b>Login preview fix</b> — <span class="d">Fixed a sprite glitch in the character preview on the login screen.</span></li>
+            <li><b>Fullscreen lag fix</b> — <span class="d">Removed a stutter specific to fullscreen mode.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Performance</h3>
+          <ul class="changes">
+            <li><b>64&nbsp;FPS</b> — <span class="d">Fixed-step rendering raised to a clean 64&nbsp;fps.</span></li>
+            <li><b>Algorithmic fixes</b> — <span class="d">Replaced several O(n²) hot paths (object sorting, child lookup, z-ordering) with O(n)/stable approaches.</span></li>
+            <li><b>Software alpha blend</b> — <span class="d">Vectorised 565 alpha blending and improved transparency, removing the semi-transparency frame drops.</span></li>
+            <li><b>Effect throttling</b> — <span class="d">Capped on-screen spell effects to keep frame rate stable during dense combat.</span></li>
+            <li><b>Faster login</b> — <span class="d">Optimised the login/loading sequence and disabled the legacy updater.</span></li>
+            <li><b>Monster teleport lag fix</b> — <span class="d">Removed a hitch when monsters teleport.</span></li>
+            <li><b>Smoother NPC/monster movement</b> — <span class="d">The network catch-up that made monsters visibly “speed up / micro-teleport” now uses a continuous factor (+25% speed per queued step instead of abrupt ×2/×3 jumps) — ordinary monsters move smoothly again while dungeon waves still drain their backlog just as fast.</span></li>
+            <li><b>Game data memory-mapped</b> — <span class="d">The data files (<code>.dda</code> sprites, world database) are now truly memory-mapped (they never were, despite the class name): reads are served by the OS page cache with no seek state, and the per-byte XOR decode now works per 4&nbsp;KB block.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Stability, 64-bit &amp; diagnostics</h3>
+          <ul class="changes">
+            <li><b>Crash minidumps</b> — <span class="d">Any crash (or abnormal exit) now writes <code>CrashDumps\T4CClient_&lt;date&gt;.dmp</code> next to the exe plus a <code>CRASH</code> line in <code>BootLog.txt</code> — open the dump in Visual Studio to get the full call stacks of every thread.</span></li>
+            <li><b>804 x64 warnings fixed</b> — <span class="d">The 64-bit build is now warning-free. Among them, real x64 bugs: UDP completion-port packet pointers truncated to 32 bits (guaranteed corruption), the audio callback pointer likewise, and printf-format mismatches.</span></li>
+            <li><b>AddressSanitizer build</b> — <span class="d">New opt-in <code>asan64.cmd</code> build that catches buffer overflows and use-after-free at runtime during test sessions.</span></li>
+            <li><b>Deprecated APIs retired</b> — <span class="d"><code>GetVersionEx</code> and <code>inet_addr</code> replaced by supported equivalents; leftover debug logging removed from the mouse/render hot paths.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Input</h3>
+          <ul class="changes">
+            <li><b>DirectInput removed</b> — <span class="d">Keyboard and mouse now use native Windows input (<code>GetAsyncKeyState</code>, <code>WM_MOUSEWHEEL</code>) instead of the DirectInput API deprecated since ~2005 — one less emulation layer, <code>dinput8.dll</code> no longer imported. Same keys, buttons, wheel direction and alt-tab behaviour.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>HTML user interface (Ultralight)</h3>
+          <ul class="changes">
+            <li><b>Pre-game UI</b> — <span class="d">New HTML front-end for login, character selection/creation, options and splash, driven by Ultralight over D3D11.</span></li>
+            <li><b>In-game character sheet</b> — <span class="d">Live HTML character sheet overlay (Ctrl+S); fixed a black flash on open.</span></li>
+            <li><b>Inventory &amp; equipment UI</b> — <span class="d">New HTML inventory and equipment screens; right-click shows consumable (potion) effects.</span></li>
+            <li><b>NPC dialogue panel</b> — <span class="d">Second Ultralight view: an HTML dialogue panel above the NPC with clickable keywords and free text input.</span></li>
+            <li><b>Login QoL</b> — <span class="d">First character is selected by default on the login screen.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Audio</h3>
+          <ul class="changes">
+            <li><b>Removed MP3/CD music player</b> — <span class="d">The old music players were polling constantly and tanking FPS; removed.</span></li>
+            <li><b>Sound rate cap</b> — <span class="d">Limited sounds to ~20/second, recovering from 10&nbsp;fps back to 54&nbsp;fps in heavy scenes.</span></li>
+            <li><b>Floor-item sound fix</b> — <span class="d">Stopped loading sound assets for ground items that don’t need them.</span></li>
+            <li><b>Distance-based sound (spatial)</b> — <span class="d">Monster combat sounds (attacks, pain cries, deaths) now fade with distance from the player instead of always playing at full volume: full up to ~10 tiles, a smooth roll-off to a faint level by ~30 tiles, then silence beyond. The player’s own sounds and UI sounds are unaffected.</span></li>
+            <li><b>DirectShow removed (music playback)</b> — <span class="d">Background music and cave/crypt ambience used a DirectShow “video” player just to decode MP3. Replaced by a modern audio path: <b>Media Foundation</b> decodes the MP3 and <b>XAudio2</b> plays it with native looping and volume — all Windows SDK, nothing extra to ship. The old position-polling loop thread is gone (XAudio2 loops natively).</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Lighting</h3>
+          <ul class="changes">
+            <li><b>Light / low-light fixes</b> — <span class="d">Corrected light and low-light rendering.</span></li>
+            <li><b>Permanent night in caverns</b> — <span class="d">Cavern dungeons now stay dark regardless of world time.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Chat &amp; text</h3>
+          <ul class="changes">
+            <li><b>Paste crash fix</b> — <span class="d">Fixed a random crash when pasting text (a thread race on the chat text sprite, now guarded by a per-object critical section).</span></li>
+            <li><b>Paste speed fix</b> — <span class="d">Removed the O(n²) per-character rebuild and the hard-coded paste throttle; pasting is now instant.</span></li>
+            <li><b>Chat clipping under D3D11</b> — <span class="d">Long chat lines no longer overflow to the left; the clip rectangle is honoured on the GPU path.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>“Vampire Survivors” dungeon mode</h3>
+          <ul class="changes">
+            <li><b>Perk choice popup</b> — <span class="d">HTML 3-card perk picker shown at the end of a wave; respects the client’s selected language and shows perk level transitions.</span></li>
+            <li><b>Player freeze during choice</b> — <span class="d">The player is frozen (mouse and keyboard/arrow movement) while the perk panel is open.</span></li>
+            <li><b>Cleave “slash” visual</b> — <span class="d">A procedural elliptical shockwave ring is drawn under the player on a melee swing, sized to the cleave radius (grows with the perk level).</span></li>
+            <li><b>Instant monster death</b> — <span class="d">Removed the old delay (≈500&nbsp;ms) before a killed monster plays its death animation; corpses now appear immediately and in sync.</span></li>
+            <li><b>Projectile-accurate spells</b> — <span class="d">Spell damage, the monster’s hurt cry and death now land when the projectile visually hits, not at cast time.</span></li>
+            <li><b>Projectile-accurate arrows</b> — <span class="d">Arrows fly faster (tunable) and their impact — damage, the monster’s pain sound and death — is deferred to the moment the arrow lands.</span></li>
+            <li><b>Group-based PvP cursor (no combat mode)</b> — <span class="d">Removed the Ctrl+C “combat mode” toggle. The attack cursor now shows by default when hovering another player who is <b>not in your group</b>; group members keep the neutral cursor. Safe zones need no special handling client-side — the server already blocks attacks there.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Network security</h3>
+          <ul class="changes">
+            <li><b>Encrypted &amp; authenticated packets</b> — <span class="d">On connect the client now runs an <b>ECDH&nbsp;P-256</b> key exchange with the server and encrypts every UDP packet with <b>AES-256-GCM</b> — confidentiality, integrity and authenticity per packet — using native Windows <code>CNG&nbsp;(bcrypt)</code>, no external dependency.</span></li>
+            <li><b>Anti-replay &amp; anti-spoofing</b> — <span class="d">Each packet carries a monotonic sequence (used as the GCM nonce) with a sliding replay window; a packet’s identity is bound to the session key, not the source address — so address spoofing and packet replay no longer work.</span></li>
+            <li><b>Crypto cost per packet cut ~50×</b> <span style="color:#7ad6a0">(~10-50&nbsp;µs → 0.6&nbsp;µs)</span> — <span class="d">The shared <code>SecureChannel</code> module no longer opens a bcrypt provider and generates an AES-GCM key on <i>every</i> packet: the provider is opened once and both directional key handles are derived once per session at the handshake. Same change on client and server (shared file); the wire format is untouched, so an un-patched client stays compatible.</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================ SERVER ============================ -->
+    <section class="side srv">
+      <h2><span class="tag">SERVER</span> Game server</h2>
+      <div class="body">
+
+        <div class="grp">
+          <h3>Build &amp; infrastructure</h3>
+          <ul class="changes">
+            <li><b>VS2022 toolset</b> — <span class="d">Server and DLLs build on the VS2022 (v143) toolset.</span></li>
+            <li><b>64-bit build</b> — <span class="d">Server and all 8 NPC plugin DLLs build and run 64-bit.</span></li>
+            <li><b>x64 bug fixes</b> — <span class="d">Truncated IOCP completion key and thread handle, and a wrong-size flag <code>memcpy</code>.</span></li>
+            <li><b>1080p display range</b> — <span class="d">Increased NPC/item view range and monster spawn distance for 1080p screens.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Localization &amp; content fixes</h3>
+          <ul class="changes">
+            <li><b>Per-player language</b> — <span class="d">Server messages now use each player’s language everywhere (fixes NPC lists previously stuck in English).</span></li>
+            <li><b>UTF-8 fix</b> — <span class="d">Corrected UTF-8 handling.</span></li>
+            <li><b>Potion effects</b> — <span class="d">Consumable use effects (HP/mana) are reported so the client can display them.</span></li>
+            <li><b>Evil-quest bug fix</b> — <span class="d">Fixed a random bug in the evil quest line.</span></li>
+            <li><b>NPC purchase spam fix</b> — <span class="d">NPCs no longer repeat the “thanks for your purchase” message.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Performance &amp; stability</h3>
+          <ul class="changes">
+            <li><b>Deadlock-logging tracer disabled</b> — <span class="d">The lock tracer was serialising every lock through one global section (~45% CPU); disabled in code.</span></li>
+            <li><b>Memory leak fix</b> — <span class="d">Plugged a server memory leak.</span></li>
+            <li><b>Area-spell packet regrouping</b> — <span class="d">Grouped per-target area-spell effects into one packet instead of a UDP burst that was being dropped (~85% loss).</span></li>
+            <li><b>Flag table fix</b> — <span class="d">Fixed duplication / over-loading of the quest-flag table.</span></li>
+            <li><b>Faster startup — WDA data loading ~29% faster</b> <span style="color:#7ad6a0">(≈375 ms → 265 ms measured)</span> — <span class="d">Removed O(n²) work in WDA loading: unit-type name resolution (<code>GetIDFromName</code>, also the per-registration duplicate check) now uses a name→id index instead of a full linked-list scan; item appearances are cached instead of creating &amp; destroying a full unit object 8× per monster; NPC script-item lookup uses an (id,type) map. World/map loading and the runtime spatial grid were already O(1) and unchanged (only a minor grid-init memset). Behaviour is identical — startup is just faster, scaling with the number of items/monsters/NPCs.</span></li>
+            <li><b>Collision map unpacked to 1 byte/cell — lock-free <code>IsBlocking</code></b> <span style="color:#7ad6a0">(8 threads: 165&nbsp;ms → 1.8&nbsp;ms per 400k lookups)</span> — <span class="d">The collision map was stored 4&nbsp;bits per cell (two cells per byte). That packing is what forced the world lock: <code>SetBlocking</code> had to read-modify-write a byte <i>shared by two cells</i>, so two threads writing neighbouring cells could corrupt each other — which meant <code>IsBlocking</code> had to take the map lock just to <i>read</i> one cell. Measured on the real map, that lock serialised every thread: going from 1 to 8 threads made the server <b>33× slower</b> (4.97&nbsp;ms → 165&nbsp;ms), i.e. adding cores actively hurt. Cells are now unpacked to 1 byte at load, so writing a cell is an atomic x86 store and <code>IsBlocking</code> reads with no lock at all — 8 threads now cost 1.8&nbsp;ms and scaling is flat instead of collapsing. Also fixed on the way: a <code>delete</code> on a <code>new[]</code>, a map name not NUL-terminated (<code>std::string</code> read past the stack buffer), and a bounds guard whose arithmetic overflowed before the check ran. <b>The on-disk format is unchanged</b> (still 4&nbsp;bits/cell — nothing to regenerate). The previous memory-mapped “pristine” trick is therefore gone: map memory rises from ~47&nbsp;MB to ~170&nbsp;MB resident — a deliberate trade, RAM for the lock. Equivalence was proven cell by cell across all 8 worlds: <b>75,497,472 cells, zero divergence</b>.</span></li>
+            <li><b>Tile-deduplicated map format — measured, then rejected</b> — <span class="d">Kept for the record: the map was also tested as an 8×8 deduplicated tile format (36&nbsp;MB → 3.9&nbsp;MB on disk, table small enough for L2). Benchmarked against the real access patterns it was <b>slower</b>, not faster — 2.09× on the pathfinding flow field, 1.19× on clustered collision checks — because accesses are spatially clustered and already sit in cache; the indirection only added work. It only won (1.04×) on fully scattered lookups, which the server never does. The flat format was the right one all along; the lock was the problem.</span></li>
+            <li><b>Database ODBC → MySQL</b> — <span class="d">Replaced ODBC — which serialised all database access through one global lock and one write thread — with a direct libmariadb backend; connection settings moved to <code>MYSQL_*</code> keys in <code>T4CServer.ini</code>.</span></li>
+            <li><b>Bulk autosave</b> — <span class="d">All connected players are saved in a few SQL commands per tick instead of ~1800; one write connection with a deadlock retry and a capped transaction size.</span></li>
+            <li><b>Mass-disconnect RAM leak fixed</b> — <span class="d">Lost connections were freed at only ~10/s (a <code>Sleep(100)</code> each), ballooning RAM until crash; now drained in bulk.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Network throughput — 1800 concurrent players, no lag <span style="color:#7ad6a0">(validated)</span></h3>
+          <ul class="changes">
+            <li><b>Broadcast worker pool unthrottled — 8 → 31 workers</b> <span style="color:#7ad6a0">(~57k → ~130-260k sends/s)</span> — <span class="d">The biggest win by far. <code>BCAST_POOL_MAX</code> was hard-coded to <b>8</b> regardless of core count. Broadcast throughput is exactly <i>workers ÷ per-send latency</i>, so on a 32-core machine the pool was capped at ~57k sends/s while 500 players in one area need ~130k/s — the queue filled and dropped broadcasts, delivering stale positions (rubber-banding). Now one worker per core; the send-thread pool was capped at 7 for the same reason and is now 15 (its array was resized accordingly).</span></li>
+            <li><b>AES key no longer regenerated per packet</b> <span style="color:#7ad6a0">(~10-50&nbsp;µs → 0.6&nbsp;µs per seal)</span> — <span class="d">Every sealed packet opened a fresh bcrypt provider and generated a new AES-GCM key, then destroyed both — ~175k times per second. The provider is now opened once, and the two directional key handles are generated once per session at the ECDH handshake and cached in the session. Wire format unchanged, so old clients stay compatible.</span></li>
+            <li><b>Connection table sharded (32 ways)</b> — <span class="d">The <code>GetConnection</code> hot path (~173k lookups/s) funnelled every send, receive and maintenance pass through a single lock. The table is now 32 independent shards (Fibonacci-hashed on the connection key), each with its own critical section, and the maintenance pass locks <b>one shard at a time</b> instead of freezing the whole table for 5-50&nbsp;ms every 100&nbsp;ms. Earlier reader/writer-lock attempts caused livelocks; sharding removes the single hot lock entirely.</span></li>
+            <li><b>Broadcast convoy removed</b> <span style="color:#7ad6a0">(92&nbsp;µs → 0.1&nbsp;µs per send)</span> — <span class="d">Concurrent broadcast jobs carry near-identical recipient lists (the same nearby players), so every worker walked the list from index&nbsp;0 at the same instant and piled up on each connection's send lock in lockstep — ~30 workers queueing on one lock. Each job now enters the list at a rotating offset, so workers touch distinct connections at any instant.</span></li>
+            <li><b>Lock-free UDP packet pool</b> — <span class="d">Once crypto was fast, <code>PacketAlloc</code>/<code>PacketFree</code> churned the CRT heap ~260k times/s and became the bottleneck (live packets peaked at 290k). Packets ≤2&nbsp;KB are now recycled with their buffer through a Windows <code>SLIST</code> (lock-free, ABA-safe); larger split packets still use the heap. Note: a first attempt using a single critical section was <i>worse</i> than the heap on 32 cores — the CRT's low-fragmentation heap has per-core arenas, one global lock does not.</span></li>
+            <li><b>Result</b> — <span class="d">500 concurrent players in a single area: <b>zero dropped broadcasts</b>, broadcast queue drained (12/4000), no rubber-banding, no perceptible lag. The complete send path — shard lock, connection lock, AES-GCM seal, packet allocation and IOCP post — measures <b>~5&nbsp;µs</b> end to end.</span></li>
+            <li><b>1800 concurrent players</b> — <span class="d">The server sustains 1800 players at once with no lag in steady state (load-tested).</span></li>
+            <li><b>Anti-flood: private ranges exempt</b> — <span class="d">The per-IP connection cap (16 simultaneous) blocked load testing from a single LAN host. Loopback and the RFC1918 private ranges (10/8, 172.16/12, 192.168/16) are now exempt; the cap and the creation rate-limit stay <b>fully enforced for public IPs</b> — a flood cannot originate from ranges that are not routable on the Internet.</span></li>
+            <li><b>Temporary profilers removed</b> — <span class="d">The instrumentation that located all of the above ended up being a bottleneck itself: it printed to the console from the packet-processing thread, and Windows console I/O is synchronous and serialised — it stalled that thread for up to <b>1.3&nbsp;s</b>, showing up in-game as a 1-2&nbsp;s input delay. All profiling code has been removed from the hot paths.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Bandwidth — move broadcasts grouped <span style="color:#e8c46a">(written, not yet built)</span></h3>
+          <ul class="changes">
+            <li><b>Where the bytes actually go</b> — <span class="d">A move broadcast costs <b>83 bytes on the wire to carry 8 bytes of real change</b> (unit id + X + Y) — 90% overhead. The breakdown matters: 28 IP/UDP + 4 <code>PacketHeader</code> + 24 AES-GCM seal = <b>56 bytes of per-datagram framing</b>, then 4 dead bytes + 6 (id/X/Y) + 17 of full unit description. The framing is the point: shrinking the payload cannot touch it. Measured on the 500-clustered-bot scenario, movement alone accounts for <b>~415 Mbps</b> (500 players × 2.5 broadcasts/s × ~500 recipients × 83 B) — the fanout is O(n²) in a dense crowd.</span></li>
+            <li><b>Megapack revived — 83 → 31 bytes per move</b> <span style="color:#7ad6a0">(~415 → ~154 Mbps)</span> — <span class="d">Since only fewer/bigger datagrams can amortise the 56-byte framing, small unreliable packets are grouped again. The transport already had a “megapack” mechanism but it had been <b>dead since encryption landed</b>: packets were sealed <i>before</i> the grouping decision, and the code then forced <code>bSendDirect</code> on anything sealed — so nothing could ever be grouped (and <code>EnableCOMMMegaPack</code> was 0 in the ini besides). Grouping now happens <i>before</i> the seal and the whole megapack is sealed <b>once</b> — which is exactly what the client already expects, since it unseals the datagram and <i>then</i> looks for the <code>0xFFFF</code> marker in the plaintext. <b>No client change required.</b> Up to 33 moves per datagram → 31 B/move.</span></li>
+            <li><b>Megapack no longer forced reliable</b> — <span class="d">The old grouping code set <code>ushNeedAck=1</code> / <code>ulNbrAck=2</code> on every megapack. Applied to movement that is a contradiction: it would <i>retransmit stale positions</i> — worse than dropping them, and extra traffic while trying to remove some. Move megapacks are now unreliable, matching the packets they carry.</span></li>
+            <li><b>Trade-off</b> — <span class="d">Grouping adds up to <code>MEGA_FLUSH_MS</code> (20&nbsp;ms) before a datagram leaves, including the echo of the player’s <i>own</i> move (the sender is not excluded from the broadcast) — ~10% of the 200&nbsp;ms move step. Under load the megapack fills on <i>size</i> well before the timer, so the delay mostly bounds low-traffic connections. <b>Requires <code>EnableCOMMMegaPack=1</code></b> in <code>T4CServer.ini</code> (it ships at 0) — which is also the kill switch: set it back to 0 to restore immediate sends.</span></li>
+            <li><b>Status</b> — <span class="d">The wire format is validated by an independent round-trip bench: 200 moves built exactly as the server builds them, then parsed exactly as the client parses them — 7 datagrams, all 200 sub-packets recovered with correct content <i>and order</i>, 31.1 B/move. <b>The server itself has not been compiled</b> (the MFC component is missing from the local Visual Studio install), so this is not yet a shipped, run-tested change. The ~154 Mbps figure is computed from verified packet sizes, not measured on a live run.</span></li>
+            <li><b>Next (not done)</b> — <span class="d">Slimming the packet itself — dropping the 4 dead bytes (a key/checksum header that is written as zeros and never filled: the encryption it belonged to is commented out on both sides) and sending only what changes instead of the full 17-byte unit description — takes it further, to ~13 B/move (~64 Mbps). It is deliberately <i>not</i> bundled here: it changes the shared wire format on every packet in the game, needs a client redeploy, and has no ini kill switch. Sequenced after the megapack is built and verified, so that a regression has one suspect instead of two.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Dungeon &amp; monster waves</h3>
+          <ul class="changes">
+            <li><b>New isolated world</b> — <span class="d">A dedicated world for the Vampire-Survivors mode.</span></li>
+            <li><b>Wave system</b> — <span class="d">Monster wave spawning with sub-waves, aggro circles and tuned spawn distances.</span></li>
+            <li><b>Multiple monster types per wave</b> — <span class="d">A wave can mix monster types by percentage (e.g. <code>goblin(50) bat(25) rat(25)</code>).</span></li>
+            <li><b>Dungeon mapping &amp; commands</b> — <span class="d">Flood-fill dungeon detection with a size filter, plus <code>DUNGEONID</code>, <code>MAPDUNGEONS</code> and <code>TPDUNGEON</code> (teleport to a dungeon’s nearest walkable centre).</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Perk system</h3>
+          <ul class="changes">
+            <li><b>Player-chosen perks</b> — <span class="d">Transient per-run perks offered at wave end (server picks 3, client shows the cards, choice returns to the server); cleared on death, disconnect or dungeon completion.</span></li>
+            <li><b>Upgradeable perks</b> — <span class="d">Re-picking a perk levels it up; effects scale per level.</span></li>
+            <li><b>Multi-target spells</b> — <span class="d">Single-target spells splash to nearby monsters; the count grows with the perk level.</span></li>
+            <li><b>Spell power &amp; magic lifesteal</b> — <span class="d">Increased spell damage and life-on-damage healing, both scaling with level.</span></li>
+            <li><b>Melee cleave</b> — <span class="d">Melee auto-attacks become an area hit (radius grows with level), melee weapons only — not bows.</span></li>
+            <li><b>Freeze during selection</b> — <span class="d">The current dungeon (player, group and its monsters, plus the wave timer) is frozen while a perk is being chosen.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Combat — projectile-accurate impact</h3>
+          <ul class="changes">
+            <li><b>Ghost-monster fix (root cause)</b> — <span class="d"><code>Creatures::Death</code> now broadcasts the corpse for <i>every</i> death, so indirectly-killed monsters (cleave, area spells, DoT) no longer stay shown alive on the client.</span></li>
+            <li><b>Deferred spell impact</b> — <span class="d">Spell damage/death/loot are applied when the projectile reaches the target; the flight time is computed to match the client projectile exactly, with no protocol change.</span></li>
+            <li><b>Deferred arrow impact</b> — <span class="d">Bow arrows behave like spells: the arrow flies first, then damage and death are applied on arrival.</span></li>
+            <li><b>Arrow HP-bar sync</b> — <span class="d">On arrow impact the server broadcasts a unit update (same mechanism as spells) so the monster’s health bar drops on hit instead of one shot late.</span></li>
+            <li><b>Cleave slash broadcast</b> — <span class="d">New lightweight packet so nearby clients can draw the melee cleave shockwave.</span></li>
+            <li><b>Group-based PvP (no more combat mode)</b> — <span class="d">Removed the “combat mode” (Ctrl+C) requirement for offensive spells. In any PvP-capable (unprotected) zone, offensive spells — single-target and area — now hit any player who is <b>not in your group</b>; group members are never hit, and safe havens remain fully protected. This also fixes area spells being wrongly rejected with “You cannot cast offensive spells on yourself.” when no monster was targeted (the target resolved to the caster). A single-target offensive spell on yourself is still blocked; an area spell centred on yourself is allowed.</span></li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <h3>Network security</h3>
+          <ul class="changes">
+            <li><b>Encrypted &amp; authenticated UDP protocol</b> — <span class="d">The server answers the client’s <b>ECDH&nbsp;P-256</b> handshake, derives a per-session key (HKDF) and encrypts/authenticates every packet with <b>AES-256-GCM</b>, all via native Windows <code>CNG&nbsp;(bcrypt)</code> — no external dependency. Built into the transport layer, so no application code changed.</span></li>
+            <li><b>Identity bound to the session key</b> — <span class="d">A packet is now attributed to a player by verifying its authentication tag, not by its source UDP address — closing the long-standing <b>address-spoofing and replay</b> weakness of the address-based protocol. Anti-replay uses a per-session sliding sequence window.</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div class="legend">
+      <span><span class="dot" style="background:#7ad6a0"></span> Client</span>
+      <span><span class="dot" style="background:#7fb2ff"></span> Server</span>
+    </div>
+    <p>Made for fun</p>
+  </footer>
+
+</div>
+</body>
+</html>
